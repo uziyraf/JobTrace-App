@@ -32,7 +32,6 @@ class _SafeSpaceScreenState extends State<SafeSpaceScreen> {
       'likes': 856,
       'comments': 42,
       'hasImage': true,
-      // Tambahkan <Color> di depan kurung siku
       'color': <Color>[Colors.orange, Colors.pink],
     },
     {
@@ -43,7 +42,6 @@ class _SafeSpaceScreenState extends State<SafeSpaceScreen> {
       'answer': "Focus on the learning outcome...",
       'likes': 32,
       'comments': 56,
-      // Tambahkan <Color> di depan kurung siku
       'color': <Color>[Colors.purple, Colors.indigo],
     },
   ];
@@ -51,7 +49,6 @@ class _SafeSpaceScreenState extends State<SafeSpaceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Menggunakan Gradient background persis Figma
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -79,7 +76,6 @@ class _SafeSpaceScreenState extends State<SafeSpaceScreen> {
     );
   }
 
-  // 1. Header (SafeSpace Title & Icons)
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.all(16.0),

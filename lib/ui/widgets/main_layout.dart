@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:jobtracker/features/job_tracker/job_screen.dart';
 import 'package:jobtracker/features/job_tracker/list_application_screen.dart';
 import 'package:jobtracker/features/profile/profile_screen.dart';
-import 'package:jobtracker/features/safe_space/safe_space_screen.dart';
+import 'package:jobtracker/features/job_tracker/list_schedule_screen.dart';
 import 'package:jobtracker/features/wrapped/analytic_screen.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
@@ -22,7 +22,7 @@ class _MainLayoutState extends State<MainLayout> {
   final List<Widget> _pages = [
     const JobScreen(), // Index 0: Home (Dashboard yang baru kita buat)
     const ListApplicationScreen(), // Index 1: Placeholder
-    const SafeSpaceScreen(), // Index 2: SafeSpace
+    const ListScheduleScreen(), // Index 2: SafeSpace
     const AnalyticScreen(), // Index 3: Placeholder
     const ProfileScreen(), // Index 4: Placeholder
   ];
@@ -64,9 +64,7 @@ class _MainLayoutState extends State<MainLayout> {
             label: 'Jobs',
           ),
           BottomNavigationBarItem(
-            icon: Icon(LucideIcons.users),
-            label: 'SafeSpace',
-          ),
+              icon: Icon(LucideIcons.calendarDays), label: 'Interviews'),
           BottomNavigationBarItem(
             icon: Icon(LucideIcons.lineChart),
             label: 'Analytic',

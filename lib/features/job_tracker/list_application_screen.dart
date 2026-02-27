@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:jobtracker/features/job_tracker/add_application_screen.dart';
+import 'package:jobtracker/data/models/daos/application_dao.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:jobtracker/features/job_tracker/detail_application_screen.dart';
+
+import 'package:jobtracker/features/job_tracker/add_application_screen.dart';
+import '../../data/models/application_model.dart';
 
 class ListApplicationScreen extends StatefulWidget {
   const ListApplicationScreen({super.key});
@@ -11,44 +15,27 @@ class ListApplicationScreen extends StatefulWidget {
 }
 
 class _ListApplicationScreenState extends State<ListApplicationScreen> {
-  // Variable filter ini nanti akan digunakan untuk query ke Database (Backend)
   String selectedFilter = 'All';
 
-  // Struktur List ini sudah saya samakan dengan Model Data yang kita siapkan di folder /data/
-  final List<Map<String, dynamic>> applications = [
-    {
-      'company': 'Google',
-      'role': 'Senior Product Designer',
-      'status': 'Interview',
-      'date': 'Applied 2 days ago',
-      'platform': 'LinkedIn',
-      'logo': 'https://placehold.co/100x100',
-    },
-    {
-      'company': 'Amazon',
-      'role': 'Frontend Developer',
-      'status': 'Applied',
-      'date': 'Applied 1 week ago',
-      'platform': 'Indeed',
-      'logo': 'https://placehold.co/100x100',
-    },
-    {
-      'company': 'Airbnb',
-      'role': 'UX Researcher',
-      'status': 'Offer',
-      'date': 'Applied 3 weeks ago',
-      'platform': 'Website',
-      'logo': 'https://placehold.co/100x100',
-    },
-    {
-      'company': 'Spotify',
-      'role': 'Product Manager',
-      'status': 'Rejected',
-      'date': 'Applied 1 month ago',
-      'platform': 'LinkedIn',
-      'logo': 'https://placehold.co/100x100',
-    },
-  ];
+  // 2. UBAH VARIABEL UNTUK MENAMPUNG DATA ASLI
+  List<ApplicationModel> applications = [];
+  bool isLoading = true; // Indikator loading saat mengambil data
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshApplications(); // Panggil data saat halaman pertama kali dibuka
+  }
+
+  // 3. FUNGSI UNTUK MENGAMBIL DATA DARI DATABASE
+  Future<void> _refreshApplications() async {
+    setState(() => isLoading = true);
+    final data = await ApplicationDao().getAllApplications();
+    setState(() {
+      applications = data;
+      isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,31 +47,43 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
             _buildHeader(),
             _buildFilterBar(),
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(20),
-                itemCount: applications.length,
-                itemBuilder: (context, index) {
-                  final item = applications[index];
-                  // Logic filter sederhana: jika bukan 'All', maka saring berdasarkan status
-                  if (selectedFilter != 'All' &&
-                      item['status'] != selectedFilter) {
-                    return const SizedBox.shrink();
-                  }
-                  return _buildJobCard(item);
-                },
-              ),
+              // 4. CEK APAKAH SEDANG LOADING ATAU KOSONG
+              child: isLoading
+                  ? const Center(
+                      child:
+                          CircularProgressIndicator(color: Color(0xFF13EC80)))
+                  : applications.isEmpty
+                      ? _buildEmptyState()
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(20),
+                          itemCount: applications.length,
+                          itemBuilder: (context, index) {
+                            final item = applications[index];
+
+                            // Logic filter
+                            if (selectedFilter != 'All' &&
+                                item.status != selectedFilter) {
+                              return const SizedBox.shrink();
+                            }
+                            return _buildJobCard(item);
+                          },
+                        ),
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Fungsi Navigator untuk pindah ke halaman AddApplicationScreen
-          Navigator.push(
+        onPressed: () async {
+          // 5. TUNGGU HASIL KEMBALIAN DARI ADD SCREEN (Jika true, refresh data)
+          final result = await Navigator.push(
             context,
             MaterialPageRoute(
                 builder: (context) => const AddApplicationScreen()),
           );
+
+          if (result == true) {
+            _refreshApplications();
+          }
         },
         backgroundColor: const Color(0xFF13EC80),
         child: const Icon(LucideIcons.plus, color: Color(0xFF0F172A)),
@@ -155,66 +154,112 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
     );
   }
 
-  Widget _buildJobCard(Map<String, dynamic> job) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-      ),
+  // 6. TAMPILAN JIKA BELUM ADA DATA
+  Widget _buildEmptyState() {
+    return Center(
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  image: DecorationImage(
-                      image: NetworkImage(job['logo']), fit: BoxFit.cover),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(job['role'],
-                        style: GoogleFonts.inter(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
-                    Text(job['company'],
-                        style: GoogleFonts.inter(
-                            fontSize: 14, color: const Color(0xFF64748B))),
-                  ],
-                ),
-              ),
-              _buildStatusBadge(job['status']),
-            ],
-          ),
+          const Icon(LucideIcons.folderOpen,
+              size: 64, color: Color(0xFFCBD5E1)),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(job['date'],
-                  style: GoogleFonts.inter(
-                      fontSize: 12, color: const Color(0xFF94A3B8))),
-              Text(job['platform'],
-                  style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF13EC80))),
-            ],
-          )
+          Text("No applications yet.",
+              style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF64748B))),
+          const SizedBox(height: 8),
+          Text("Click the + button to add your first job application!",
+              style: GoogleFonts.inter(
+                  fontSize: 14, color: const Color(0xFF94A3B8))),
         ],
       ),
     );
   }
 
+  // 7. SESUAIKAN JOB CARD DENGAN APPLICATION MODEL
+  Widget _buildJobCard(ApplicationModel job) {
+    return InkWell(
+      onTap: () async {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetailApplicationScreen(job: job),
+          ),
+        );
+
+        if (result == true) {
+          _refreshApplications();
+        }
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFF1F5F9)),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEEF2F0),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Center(
+                    child: Text(
+                      job.company.substring(0, 1).toUpperCase(),
+                      style: GoogleFonts.inter(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF0EB562)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(job.role,
+                          style: GoogleFonts.inter(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text(job.company,
+                          style: GoogleFonts.inter(
+                              fontSize: 14, color: const Color(0xFF64748B))),
+                    ],
+                  ),
+                ),
+                _buildStatusBadge(job.status),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Applied on: ${job.dateApplied}",
+                    style: GoogleFonts.inter(
+                        fontSize: 12, color: const Color(0xFF94A3B8))),
+                Text(job.platform,
+                    style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF13EC80))),
+              ],
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildStatusBadge(String status) {
-    // Fungsi ini memudahkan Backend untuk memberikan warna otomatis sesuai status
     Color bg;
     Color text;
     switch (status) {

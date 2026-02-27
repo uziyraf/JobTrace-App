@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:jobtracker/data/models/daos/application_dao.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
 
+import '../../data/models/application_model.dart';
+
 class AddApplicationScreen extends StatefulWidget {
-  const AddApplicationScreen({super.key});
+  // Tambahkan parameter opsional ini. Jika null = Add, jika tidak null = Edit
+  final ApplicationModel? job;
+
+  const AddApplicationScreen({super.key, this.job});
 
   @override
   State<AddApplicationScreen> createState() => _AddApplicationScreenState();
 }
 
 class _AddApplicationScreenState extends State<AddApplicationScreen> {
-  // Controller untuk mengambil data input saat tombol Save diklik
   final _companyController = TextEditingController();
   final _positionController = TextEditingController();
   final _evaluationController = TextEditingController();
@@ -21,7 +26,25 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
   String selectedPlatform = 'LinkedIn';
   DateTime selectedDate = DateTime.now();
 
-  // Fungsi untuk memunculkan kalender (DatePicker)
+  @override
+  void initState() {
+    super.initState();
+    // JIKA DALAM MODE EDIT, ISI OTOMATIS SEMUA KOTAK INPUT!
+    if (widget.job != null) {
+      _companyController.text = widget.job!.company;
+      _positionController.text = widget.job!.role;
+      _evaluationController.text = widget.job!.evaluation ?? '';
+      _notesController.text = widget.job!.notes ?? '';
+      selectedStatus = widget.job!.status;
+      selectedPlatform = widget.job!.platform;
+      try {
+        selectedDate = DateFormat('MM/dd/yyyy').parse(widget.job!.dateApplied);
+      } catch (e) {
+        selectedDate = DateTime.now(); // Jaga-jaga kalau format tanggal salah
+      }
+    }
+  }
+
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -34,8 +57,69 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
     }
   }
 
+  Future<void> _saveApplication() async {
+    if (_companyController.text.trim().isEmpty ||
+        _positionController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Company Name and Position Title are required!'),
+            backgroundColor: Colors.redAccent),
+      );
+      return;
+    }
+
+    // Siapkan data yang mau disimpan (Ambil ID lama kalau lagi mode edit)
+    final newApp = ApplicationModel(
+      id: widget.job?.id, // Kunci utama! Kalau null berarti data baru
+      company: _companyController.text.trim(),
+      role: _positionController.text.trim(),
+      status: selectedStatus,
+      platform: selectedPlatform,
+      dateApplied: DateFormat('MM/dd/yyyy').format(selectedDate),
+      evaluation: _evaluationController.text.trim(),
+      notes: _notesController.text.trim(),
+    );
+
+    // --- BAGIAN INI YANG BERUBAH: PANGGIL DAO ---
+    final applicationDao = ApplicationDao();
+
+    // Cek apakah mode Edit atau Add
+    if (widget.job == null) {
+      await applicationDao.insertApplication(newApp); // Tambah Baru
+    } else {
+      await applicationDao.updateApplication(newApp); // Update Lama
+    }
+    // --------------------------------------------
+
+    // Opsional: Tutup halaman dan munculkan notif
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(widget.job == null
+              ? 'Application saved successfully! 🎉'
+              : 'Application updated successfully! ✨'),
+          backgroundColor: const Color(0xFF0EB562),
+        ),
+      );
+      // Kembalikan model yang baru di-save ke halaman sebelumnya
+      Navigator.pop(context, newApp);
+    }
+  }
+
+  @override
+  void dispose() {
+    _companyController.dispose();
+    _positionController.dispose();
+    _evaluationController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Ubah judul berdasarkan mode (Edit atau Add)
+    bool isEditing = widget.job != null;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF6F8F7),
       appBar: AppBar(
@@ -46,7 +130,7 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Add Application',
+          isEditing ? 'Edit Application' : 'Add Application', // Judul Dinamis
           style: GoogleFonts.inter(
               fontWeight: FontWeight.w700,
               fontSize: 18,
@@ -54,12 +138,8 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              // Di sini nanti logika simpan ke Database (Backend)
-              print("Data Tersimpan: ${_companyController.text}");
-              Navigator.pop(context);
-            },
-            child: Text('Save',
+            onPressed: _saveApplication,
+            child: Text(isEditing ? 'Update' : 'Save', // Tombol Dinamis
                 style: GoogleFonts.inter(
                     color: const Color(0xFF0EB562),
                     fontWeight: FontWeight.w600)),
@@ -77,14 +157,19 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
             _buildInputField("Position Title", "e.g. UX Designer",
                 LucideIcons.briefcase, _positionController),
             const SizedBox(height: 20),
-
             Row(
               children: [
                 Expanded(
                     child: _buildDropdown(
                         "Status",
                         selectedStatus,
-                        ['Applied', 'Interview', 'Offer', 'Rejected'],
+                        [
+                          'Applied',
+                          'Screening',
+                          'Interview',
+                          'Offer',
+                          'Rejected'
+                        ],
                         (val) => setState(() => selectedStatus = val!))),
                 const SizedBox(width: 16),
                 Expanded(
@@ -96,32 +181,28 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
               ],
             ),
             const SizedBox(height: 20),
-
             _buildDatePicker(),
             const SizedBox(height: 24),
-
             _buildSelfEvaluationBox(),
             const SizedBox(height: 24),
-
             _buildInputField(
                 "Additional Notes",
                 "URL to job posting, recruiter info, etc.",
                 null,
                 _notesController,
                 isMultiline: true),
-            const SizedBox(height: 100), // Ruang untuk FAB
+            const SizedBox(height: 100),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => print("Validate and Save"),
+        onPressed: _saveApplication,
         backgroundColor: const Color(0xFF13EC80),
         child: const Icon(LucideIcons.check, color: Color(0xFF0F172A)),
       ),
     );
   }
 
-  // Widget untuk Input Text (Reusable)
   Widget _buildInputField(String label, String placeholder, IconData? icon,
       TextEditingController controller,
       {bool isMultiline = false}) {
@@ -154,7 +235,6 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
     );
   }
 
-  // Widget untuk Dropdown
   Widget _buildDropdown(String label, String value, List<String> items,
       Function(String?) onChanged) {
     return Column(
@@ -171,22 +251,24 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
           decoration: BoxDecoration(
               color: const Color(0xFFEEF2F0),
               borderRadius: BorderRadius.circular(16)),
-          child: DropdownButton<String>(
-            value: value,
-            isExpanded: true,
-            underline: const SizedBox(),
-            items: items
-                .map((String item) =>
-                    DropdownMenuItem(value: item, child: Text(item)))
-                .toList(),
-            onChanged: onChanged,
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: value,
+              isExpanded: true,
+              items: items
+                  .map((String item) => DropdownMenuItem(
+                      value: item,
+                      child:
+                          Text(item, style: GoogleFonts.inter(fontSize: 14))))
+                  .toList(),
+              onChanged: onChanged,
+            ),
           ),
         ),
       ],
     );
   }
 
-  // Widget Date Picker (Klik untuk ganti tanggal)
   Widget _buildDatePicker() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -221,7 +303,6 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
     );
   }
 
-  // Widget Kotak Self-Evaluation (Persis Figma)
   Widget _buildSelfEvaluationBox() {
     return Container(
       padding: const EdgeInsets.all(20),
