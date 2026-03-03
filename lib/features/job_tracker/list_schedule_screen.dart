@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jobtracker/data/models/daos/schedule_dao.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+
 import '../../data/models/schedule_model.dart';
 
 class ListScheduleScreen extends StatefulWidget {
@@ -12,7 +13,6 @@ class ListScheduleScreen extends StatefulWidget {
 }
 
 class _ListScheduleScreenState extends State<ListScheduleScreen> {
-  // 2. KITA BUANG DATA DUMMY, GANTI JADI LIST KOSONG YANG AKAN DIISI DARI SQLITE
   List<ScheduleModel> upcomingList = [];
   List<ScheduleModel> completedList = [];
   bool isLoading = true;
@@ -23,11 +23,8 @@ class _ListScheduleScreenState extends State<ListScheduleScreen> {
     _fetchSchedules();
   }
 
-  // 3. FUNGSI UNTUK MENARIK DATA DARI DATABASE (DAO)
   Future<void> _fetchSchedules() async {
     setState(() => isLoading = true);
-
-    // Panggil ScheduleDao()
     final allSchedules = await ScheduleDao().getAllSchedules();
 
     setState(() {
@@ -38,12 +35,43 @@ class _ListScheduleScreenState extends State<ListScheduleScreen> {
     });
   }
 
-  // Fungsi kecil untuk menentukan warna badge platform
+  // --- FUNGSI BARU: MARK AS DONE ---
+  Future<void> _markAsDone(ScheduleModel schedule) async {
+    // 1. Ubah status model menjadi COMPLETED
+    final updatedSchedule = ScheduleModel(
+      id: schedule.id,
+      jobId: schedule.jobId,
+      company: schedule.company,
+      role: schedule.role,
+      date: schedule.date,
+      time: schedule.time,
+      platform: schedule.platform,
+      status: 'COMPLETED', // Diubah di sini!
+    );
+
+    // 2. Simpan perubahan ke Database
+    await ScheduleDao().updateSchedule(updatedSchedule);
+
+    // 3. Tampilkan Notifikasi
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Interview at ${schedule.company} marked as done! 🎉'),
+          backgroundColor: const Color(0xFF0EB562),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+
+    // 4. Refresh List agar kartu langsung pindah tab
+    _fetchSchedules();
+  }
+
   Color _getPlatformColor(String platform) {
-    if (platform == 'ZOOM') return const Color(0xFF137FEC); // Biru
-    if (platform == 'MEET') return const Color(0xFF10B981); // Hijau
-    if (platform == 'TEAMS') return const Color(0xFF9333EA); // Ungu
-    return const Color(0xFF64748B); // Abu-abu (In-Person / Default)
+    if (platform == 'ZOOM') return const Color(0xFF137FEC);
+    if (platform == 'MEET') return const Color(0xFF10B981);
+    if (platform == 'TEAMS') return const Color(0xFF9333EA);
+    return const Color(0xFF64748B);
   }
 
   @override
@@ -261,6 +289,31 @@ class _ListScheduleScreenState extends State<ListScheduleScreen> {
                   ],
                 ),
               ),
+
+              // --- TOMBOL MARK AS DONE (Hanya Muncul Jika Belum Selesai) ---
+              if (!isCompleted) ...[
+                const SizedBox(height: 12),
+                const Divider(color: Color(0xFFE2E8F0)),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton.icon(
+                    onPressed: () =>
+                        _markAsDone(item), // Panggil fungsi saat diklik
+                    icon: const Icon(LucideIcons.checkCircle2,
+                        color: Color(0xFF0EB562), size: 18),
+                    label: Text(
+                      'Mark as Done',
+                      style: GoogleFonts.inter(
+                          color: const Color(0xFF0EB562),
+                          fontWeight: FontWeight.bold),
+                    ),
+                    style: TextButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         );

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:jobtracker/core/services/notification_service.dart';
 import 'package:jobtracker/data/models/daos/schedule_dao.dart';
 import 'package:jobtracker/data/models/schedule_model.dart';
+import 'package:jobtracker/ui/widgets/main_layout.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../data/models/application_model.dart';
-import 'package:intl/intl.dart'; // Tambahkan baris ini!
+import 'package:intl/intl.dart';
 
 class ScheduleInterviewScreen extends StatefulWidget {
   final ApplicationModel job;
@@ -26,7 +28,6 @@ class _ScheduleInterviewScreenState extends State<ScheduleInterviewScreen> {
   final TextEditingController _linkController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
-  // Fungsi untuk memunculkan jam (Time Picker)
   Future<void> _selectTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -51,22 +52,32 @@ class _ScheduleInterviewScreenState extends State<ScheduleInterviewScreen> {
 
   // Fungsi saat tombol Add to Calendar diklik
   Future<void> _saveSchedule() async {
-    // 1. Bungkus data inputan ke dalam Model Jadwal
     final newSchedule = ScheduleModel(
       jobId: widget.job.id!,
       company: widget.job.company,
       role: widget.job.role,
-      date: DateFormat('MMM dd, yyyy')
-          .format(selectedDate), // Format: Oct 25, 2023
-      time: selectedTime.format(context), // Format: 10:30 AM
+      date: DateFormat('MMM dd, yyyy').format(selectedDate),
+      time: selectedTime.format(context),
       platform: selectedPlatform,
-      status: 'UPCOMING', // Default saat jadwal baru dibuat
+      status: 'UPCOMING',
+    );
+    final interviewDateTime = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      selectedTime.hour,
+      selectedTime.minute,
     );
 
-    // 2. Panggil DAO untuk menyimpan ke SQLite
+    // Panggil Service Notifikasinya!
+    await NotificationService().scheduleInterviewReminder(
+      id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
+      companyName: widget.job.company, // Sesuaikan dengan variabel namamu
+      interviewDate: interviewDateTime,
+    );
+
     await ScheduleDao().insertSchedule(newSchedule);
 
-    // 3. Tampilkan Notifikasi & Tutup Halaman
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -74,7 +85,14 @@ class _ScheduleInterviewScreenState extends State<ScheduleInterviewScreen> {
           backgroundColor: const Color(0xFF0EB562),
         ),
       );
-      Navigator.pop(context);
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const MainLayout(initialIndex: 2),
+        ),
+        (route) => false,
+      );
     }
   }
 

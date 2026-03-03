@@ -2,11 +2,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jobtracker/data/models/daos/application_dao.dart';
+import 'package:jobtracker/features/job_tracker/schedule_interview_screen.dart';
+import 'package:jobtracker/ui/widgets/main_layout.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:jobtracker/features/job_tracker/add_application_screen.dart';
-import 'package:jobtracker/features/job_tracker/schedule_interview_screen.dart';
-
-// PASTIKAN PATH IMPORT INI SESUAI DENGAN FOLDER KAMU YA
 import '../../data/models/application_model.dart';
 
 class DetailApplicationScreen extends StatefulWidget {
@@ -28,13 +27,11 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
     currentJob = widget.job; // Simpan ke state agar UI bisa di-refresh
   }
 
-  // --- LOGIKA PESAN RANDOM & CUSTOM POP UP FIGMA ---
   void _showSuccessCard(String newStatus) {
     final random = Random();
     String message = "";
     bool isInterview = newStatus == 'Interview';
 
-    // Kata-kata random sesuai status
     if (newStatus == 'Offer') {
       List<String> msgs = [
         "Woohoo! You nailed it! 🎉",
@@ -60,10 +57,9 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
       message = "Application updated\nsuccessfully!";
     }
 
-    // Tampilkan Custom Dialog persis Figma
     showDialog(
       context: context,
-      barrierDismissible: false, // User harus klik tombol untuk menutup
+      barrierDismissible: false,
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: Colors.white,
@@ -72,12 +68,11 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Ikon Bulat Hijau dengan Efek Glow
               Container(
                 width: 80,
                 height: 80,
                 decoration: const BoxDecoration(
-                  color: Color(0x3313EC80), // Hijau transparan outer
+                  color: Color(0x3313EC80),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -85,7 +80,7 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
                     width: 56,
                     height: 56,
                     decoration: const BoxDecoration(
-                      color: Color(0xFF13EC80), // Hijau solid inner
+                      color: Color(0xFF13EC80),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
@@ -102,7 +97,6 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Judul Saved!
               Text('Saved!',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(
@@ -133,7 +127,6 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
                     onPressed: () {
                       Navigator.pop(context);
 
-                      // ARAHKAN KE HALAMAN SCHEDULE!
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -162,7 +155,11 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
 
               // Tombol Dismiss
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  Navigator.pop(context); // 1. Tutup pop-up "Saved!"
+                  Navigator.pop(context,
+                      true); // 2. Tutup halaman Detail & kembali ke List
+                },
                 child: Text('Dismiss',
                     style: GoogleFonts.inter(
                         color: const Color(0xFF64748B),

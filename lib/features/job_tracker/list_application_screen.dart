@@ -177,7 +177,6 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
     );
   }
 
-  // 7. SESUAIKAN JOB CARD DENGAN APPLICATION MODEL
   Widget _buildJobCard(ApplicationModel job) {
     return InkWell(
       onTap: () async {
@@ -227,12 +226,27 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(job.role,
-                          style: GoogleFonts.inter(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
-                      Text(job.company,
-                          style: GoogleFonts.inter(
-                              fontSize: 14, color: const Color(0xFF64748B))),
+                      // 1. ROLE DI ATAS (Contoh: "junior dev" - Tebal & Gelap)
+                      Text(
+                        job.role,
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold, // Dibuat tebal
+                          color: const Color(0xFF0F172A), // Warna gelap
+                        ),
+                      ),
+
+                      const SizedBox(height: 4),
+
+                      // 2. COMPANY DI BAWAH (Contoh: "amazon" - Tipis & Abu-abu)
+                      Text(
+                        job.company,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400, // Tidak tebal
+                          color: const Color(0xFF64748B), // Warna abu-abu
+                        ),
+                      ),
                     ],
                   ),
                 ),

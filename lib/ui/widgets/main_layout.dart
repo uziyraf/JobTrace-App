@@ -8,17 +8,23 @@ import 'package:jobtracker/features/wrapped/analytic_screen.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class MainLayout extends StatefulWidget {
-  const MainLayout({super.key});
+  final int initialIndex;
+  const MainLayout({super.key, this.initialIndex = 0});
 
   @override
   State<MainLayout> createState() => _MainLayoutState();
 }
 
 class _MainLayoutState extends State<MainLayout> {
-  // Variabel untuk menyimpan indeks menu yang sedang aktif (0 = Home)
-  int _selectedIndex = 0;
+  late int _selectedIndex;
 
-  // Daftar halaman yang akan ditampilkan sesuai urutan Navbar
+  @override
+  void initState() {
+    super.initState();
+    // Tarik nilai titipan tab ke dalam selectedIndex
+    _selectedIndex = widget.initialIndex;
+  }
+
   final List<Widget> _pages = [
     const JobScreen(), // Index 0: Home (Dashboard yang baru kita buat)
     const ListApplicationScreen(), // Index 1: Placeholder
@@ -27,7 +33,6 @@ class _MainLayoutState extends State<MainLayout> {
     const ProfileScreen(), // Index 4: Placeholder
   ];
 
-  // Fungsi yang dipanggil saat tombol navbar diklik
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -37,10 +42,7 @@ class _MainLayoutState extends State<MainLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Body akan menampilkan halaman sesuai index yang dipilih
       body: _pages[_selectedIndex],
-
-      // Navbar HANYA ADA DI SINI, tidak perlu ditaruh di job_screen.dart lagi
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
@@ -54,8 +56,8 @@ class _MainLayoutState extends State<MainLayout> {
           fontSize: 10,
           fontWeight: FontWeight.w500,
         ),
-        currentIndex: _selectedIndex, // Memberi tahu tab mana yang aktif
-        onTap: _onItemTapped, // Jalankan fungsi saat diklik
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
         elevation: 10,
         items: const [
           BottomNavigationBarItem(icon: Icon(LucideIcons.home), label: 'Home'),
