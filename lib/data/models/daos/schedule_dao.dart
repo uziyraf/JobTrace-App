@@ -1,26 +1,48 @@
-import 'package:jobtracker/core/sqlite_helper.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jobtracker/data/models/schedule_model.dart';
 
 class ScheduleDao {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   Future<int> insertSchedule(ScheduleModel schedule) async {
-    final db = await DatabaseHelper.instance.database;
-    return await db.insert('schedules', schedule.toMap());
+    final int generatedId =
+        schedule.id ?? DateTime.now().millisecondsSinceEpoch;
+
+    final Map<String, dynamic> data = schedule.toMap();
+    data['id'] = generatedId;
+
+    await _firestore
+        .collection('schedules')
+        .doc(generatedId.toString())
+        .set(data);
+
+    return generatedId;
   }
 
   Future<List<ScheduleModel>> getAllSchedules() async {
-    final db = await DatabaseHelper.instance.database;
-    final result = await db.query('schedules', orderBy: 'id DESC');
-    return result.map((json) => ScheduleModel.fromMap(json)).toList();
+    final snapshot = await _firestore
+        .collection('schedules')
+        .orderBy('id', descending: true)
+        .get();
+
+    return snapshot.docs
+        .map((doc) => ScheduleModel.fromMap(doc.data()))
+        .toList();
   }
 
   Future<int> updateSchedule(ScheduleModel schedule) async {
-    final db = await DatabaseHelper.instance.database;
-    return await db.update('schedules', schedule.toMap(),
-        where: 'id = ?', whereArgs: [schedule.id]);
+    if (schedule.id == null) return 0;
+
+    await _firestore
+        .collection('schedules')
+        .doc(schedule.id.toString())
+        .update(schedule.toMap());
+
+    return schedule.id!;
   }
 
   Future<int> deleteSchedule(int id) async {
-    final db = await DatabaseHelper.instance.database;
-    return await db.delete('schedules', where: 'id = ?', whereArgs: [id]);
+    await _firestore.collection('schedules').doc(id.toString()).delete();
+    return id;
   }
 }

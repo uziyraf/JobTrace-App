@@ -1,27 +1,49 @@
-import 'package:jobtracker/core/sqlite_helper.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jobtracker/data/models/application_model.dart';
 
 class ApplicationDao {
-  // Pinjam koneksi dari Helper
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   Future<int> insertApplication(ApplicationModel app) async {
-    final db = await DatabaseHelper.instance.database;
-    return await db.insert('applications', app.toMap());
+    final int generatedId = app.id ?? DateTime.now().millisecondsSinceEpoch;
+
+    final Map<String, dynamic> data = app.toMap();
+    data['id'] = generatedId;
+
+    await _firestore
+        .collection('applications')
+        .doc(generatedId.toString())
+        .set(data);
+
+    return generatedId;
   }
 
   Future<List<ApplicationModel>> getAllApplications() async {
-    final db = await DatabaseHelper.instance.database;
-    final result = await db.query('applications', orderBy: 'id DESC');
-    return result.map((json) => ApplicationModel.fromMap(json)).toList();
+    // Ambil data dari cloud, urutkan dari yang terbaru (ID terbesar)
+    final snapshot = await _firestore
+        .collection('applications')
+        .orderBy('id', descending: true)
+        .get();
+
+    return snapshot.docs
+        .map((doc) => ApplicationModel.fromMap(doc.data()))
+        .toList();
   }
 
   Future<int> updateApplication(ApplicationModel app) async {
-    final db = await DatabaseHelper.instance.database;
-    return await db.update('applications', app.toMap(),
-        where: 'id = ?', whereArgs: [app.id]);
+    if (app.id == null) return 0;
+
+    // Update data di cloud berdasarkan ID-nya
+    await _firestore
+        .collection('applications')
+        .doc(app.id.toString())
+        .update(app.toMap());
+
+    return app.id!;
   }
 
   Future<int> deleteApplication(int id) async {
-    final db = await DatabaseHelper.instance.database;
-    return await db.delete('applications', where: 'id = ?', whereArgs: [id]);
+    await _firestore.collection('applications').doc(id.toString()).delete();
+    return id;
   }
 }

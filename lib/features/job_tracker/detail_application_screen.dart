@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jobtracker/data/models/daos/application_dao.dart';
 import 'package:jobtracker/features/job_tracker/schedule_interview_screen.dart';
-import 'package:jobtracker/ui/widgets/main_layout.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:jobtracker/features/job_tracker/add_application_screen.dart';
 import '../../data/models/application_model.dart';
@@ -21,16 +20,26 @@ class DetailApplicationScreen extends StatefulWidget {
 class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
   late ApplicationModel currentJob;
 
+  // Controller untuk input custom status
+  final TextEditingController _customStatusController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
-    currentJob = widget.job; // Simpan ke state agar UI bisa di-refresh
+    currentJob = widget.job;
+  }
+
+  @override
+  void dispose() {
+    _customStatusController.dispose();
+    super.dispose();
   }
 
   void _showSuccessCard(String newStatus) {
     final random = Random();
     String message = "";
-    bool isInterview = newStatus == 'Interview';
+    bool isInterview = newStatus == 'Interview' ||
+        newStatus.toLowerCase().contains('interview');
 
     if (newStatus == 'Offer') {
       List<String> msgs = [
@@ -39,7 +48,7 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
         "Time to celebrate your new journey! 🥳"
       ];
       message = msgs[random.nextInt(msgs.length)];
-    } else if (newStatus == 'Interview') {
+    } else if (isInterview) {
       List<String> msgs = [
         "Awesome! You're one step closer! 🚀",
         "Time to shine! Prepare your best answers.",
@@ -96,7 +105,6 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-
               Text('Saved!',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(
@@ -104,7 +112,6 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
                       fontSize: 20,
                       fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-
               Text(message,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(
@@ -112,7 +119,6 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
                       fontSize: 16,
                       height: 1.5)),
               const SizedBox(height: 32),
-
               if (isInterview) ...[
                 SizedBox(
                   width: double.infinity,
@@ -126,7 +132,6 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
                     ),
                     onPressed: () {
                       Navigator.pop(context);
-
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -152,13 +157,10 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
                 ),
                 const SizedBox(height: 12),
               ],
-
-              // Tombol Dismiss
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context); // 1. Tutup pop-up "Saved!"
-                  Navigator.pop(context,
-                      true); // 2. Tutup halaman Detail & kembali ke List
+                  Navigator.pop(context);
+                  Navigator.pop(context, true);
                 },
                 child: Text('Dismiss',
                     style: GoogleFonts.inter(
@@ -186,10 +188,9 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
       notes: currentJob.notes,
     );
 
-    await ApplicationDao()
-        .updateApplication(updatedJob); // Perbarui UI dan tutup pop up
+    await ApplicationDao().updateApplication(updatedJob);
     setState(() => currentJob = updatedJob);
-    Navigator.pop(context); // Tutup Bottom Sheet
+    Navigator.pop(context);
 
     _showSuccessCard(newStatus);
   }
@@ -197,6 +198,49 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
   // --- BOTTOM SHEET (POP UP UPDATE STATUS) ---
   void _showUpdateStatusModal() {
     String selectedStatus = currentJob.status;
+    _customStatusController.clear();
+
+    final List<String> statusHierarchy = [
+      'Applied',
+      'Screening',
+      'Interview',
+      'Offer',
+      'Rejected'
+    ];
+
+    // 👇 LOGIKA YANG DIBUAT LEBIH SIMPLE & FLEKSIBEL
+    bool isAllowed(String targetStatus) {
+      if (targetStatus == 'Rejected') return true;
+
+      int currentLevel = statusHierarchy.indexOf(currentJob.status);
+      int targetLevel = statusHierarchy.indexOf(targetStatus);
+
+      // JIKA STATUS SAAT INI ADALAH CUSTOM (Misal: Test Online)
+      if (currentLevel == -1) {
+        // Cukup kunci tahap 'Applied' saja. Sisanya biarkan terbuka
+        // agar user bisa maju ke Interview, Offer, dll secara fleksibel.
+        if (targetStatus == 'Applied') return false;
+        return true;
+      }
+
+      // JIKA MENUJU CUSTOM STATUS BARU
+      if (targetLevel == -1) return true;
+
+      // ATURAN STANDAR HIERARKI
+      return targetLevel >= currentLevel;
+    }
+
+    void showBlockedMessage() {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Oops! Kamu tidak bisa kembali ke tahap sebelumnya. 🚫',
+              style: GoogleFonts.inter(color: Colors.white)),
+          backgroundColor: const Color(0xFF0F172A),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
 
     showModalBottomSheet(
       context: context,
@@ -204,149 +248,200 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(builder: (context, setModalState) {
-          return Container(
-            height: MediaQuery.of(context).size.height * 0.75,
-            padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24), topRight: Radius.circular(24)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Handle Bar Putih/Abu
-                Center(
-                    child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                            color: const Color(0xFFCBD5E1),
-                            borderRadius: BorderRadius.circular(10)))),
-                const SizedBox(height: 24),
+          bool isCurrentStatusCustom =
+              statusHierarchy.indexOf(selectedStatus) == -1;
 
-                // Header Pop-up
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Update Status',
-                        style: GoogleFonts.inter(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF0F172A))),
-                    IconButton(
-                        icon:
-                            const Icon(LucideIcons.x, color: Color(0xFF94A3B8)),
-                        onPressed: () => Navigator.pop(context)),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                Expanded(
-                  child: ListView(
+          return Padding(
+            padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom),
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.75,
+              padding: const EdgeInsets.all(24),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                      child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                              color: const Color(0xFFCBD5E1),
+                              borderRadius: BorderRadius.circular(10)))),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildStatusOption(
-                          'Applied',
-                          const Color(0xFFDBEAFE),
-                          const Color(0xFF1D4ED8),
-                          selectedStatus,
-                          () =>
-                              setModalState(() => selectedStatus = 'Applied')),
-                      _buildStatusOption(
-                          'Screening',
-                          const Color(0xFFF3E8FF),
-                          const Color(0xFF7E22CE),
-                          selectedStatus,
-                          () => setModalState(
-                              () => selectedStatus = 'Screening')),
-                      _buildStatusOption(
-                          'Interview',
-                          const Color(0xFFFEF3C7),
-                          const Color(0xFFB45309),
-                          selectedStatus,
-                          () => setModalState(
-                              () => selectedStatus = 'Interview')),
-                      _buildStatusOption(
-                          'Offer',
-                          const Color(0xFFD1FAE5),
-                          const Color(0xFF065F46),
-                          selectedStatus,
-                          () => setModalState(() => selectedStatus = 'Offer')),
-                      _buildStatusOption(
-                          'Rejected',
-                          const Color(0xFFFFE4E6),
-                          const Color(0xFFBE123C),
-                          selectedStatus,
-                          () =>
-                              setModalState(() => selectedStatus = 'Rejected')),
-
-                      const SizedBox(height: 16),
-                      Text('CUSTOM STATUS',
+                      Text('Update Status',
                           style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF64748B),
-                              letterSpacing: 1.2)),
-                      const SizedBox(height: 8),
-
-                      // Input Custom (Hanya placeholder UI untuk sekarang)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              decoration: InputDecoration(
-                                hintText: 'e.g. Technical Assignment',
-                                hintStyle: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    color: const Color(0xFF94A3B8)),
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                        color: Color(0xFFE2E8F0))),
-                                contentPadding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 14),
-                            decoration: BoxDecoration(
-                                color: const Color(0xFFE2E8F0),
-                                borderRadius: BorderRadius.circular(12)),
-                            child: Text('ADD',
-                                style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color(0xFF0F172A))),
-                          )
-                        ],
-                      )
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF0F172A))),
+                      IconButton(
+                          icon: const Icon(LucideIcons.x,
+                              color: Color(0xFF94A3B8)),
+                          onPressed: () => Navigator.pop(context)),
                     ],
                   ),
-                ),
-
-                // Tombol Confirm
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0EB562),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                      elevation: 4,
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: ListView(
+                      children: [
+                        _buildStatusOption(
+                            'Applied',
+                            isAllowed('Applied')
+                                ? const Color(0xFFDBEAFE)
+                                : const Color(0xFFF1F5F9),
+                            isAllowed('Applied')
+                                ? const Color(0xFF1D4ED8)
+                                : const Color(0xFF94A3B8),
+                            selectedStatus,
+                            () => isAllowed('Applied')
+                                ? setModalState(
+                                    () => selectedStatus = 'Applied')
+                                : showBlockedMessage()),
+                        _buildStatusOption(
+                            'Screening',
+                            isAllowed('Screening')
+                                ? const Color(0xFFF3E8FF)
+                                : const Color(0xFFF1F5F9),
+                            isAllowed('Screening')
+                                ? const Color(0xFF7E22CE)
+                                : const Color(0xFF94A3B8),
+                            selectedStatus,
+                            () => isAllowed('Screening')
+                                ? setModalState(
+                                    () => selectedStatus = 'Screening')
+                                : showBlockedMessage()),
+                        _buildStatusOption(
+                            'Interview',
+                            isAllowed('Interview')
+                                ? const Color(0xFFFEF3C7)
+                                : const Color(0xFFF1F5F9),
+                            isAllowed('Interview')
+                                ? const Color(0xFFB45309)
+                                : const Color(0xFF94A3B8),
+                            selectedStatus,
+                            () => isAllowed('Interview')
+                                ? setModalState(
+                                    () => selectedStatus = 'Interview')
+                                : showBlockedMessage()),
+                        _buildStatusOption(
+                            'Offer',
+                            isAllowed('Offer')
+                                ? const Color(0xFFD1FAE5)
+                                : const Color(0xFFF1F5F9),
+                            isAllowed('Offer')
+                                ? const Color(0xFF065F46)
+                                : const Color(0xFF94A3B8),
+                            selectedStatus,
+                            () => isAllowed('Offer')
+                                ? setModalState(() => selectedStatus = 'Offer')
+                                : showBlockedMessage()),
+                        _buildStatusOption(
+                            'Rejected',
+                            isAllowed('Rejected')
+                                ? const Color(0xFFFFE4E6)
+                                : const Color(0xFFF1F5F9),
+                            isAllowed('Rejected')
+                                ? const Color(0xFFBE123C)
+                                : const Color(0xFF94A3B8),
+                            selectedStatus,
+                            () => isAllowed('Rejected')
+                                ? setModalState(
+                                    () => selectedStatus = 'Rejected')
+                                : showBlockedMessage()),
+                        if (isCurrentStatusCustom) ...[
+                          _buildStatusOption(
+                              selectedStatus,
+                              const Color(0xFFE2E8F0),
+                              const Color(0xFF475569),
+                              selectedStatus,
+                              () {})
+                        ],
+                        const SizedBox(height: 16),
+                        Text('CUSTOM STATUS',
+                            style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF64748B),
+                                letterSpacing: 1.2)),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _customStatusController,
+                                decoration: InputDecoration(
+                                  hintText: 'e.g. Online Test',
+                                  hintStyle: GoogleFonts.inter(
+                                      fontSize: 14,
+                                      color: const Color(0xFF94A3B8)),
+                                  border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(
+                                          color: Color(0xFFE2E8F0))),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: () {
+                                String newCustom =
+                                    _customStatusController.text.trim();
+                                if (newCustom.isNotEmpty) {
+                                  setModalState(() {
+                                    selectedStatus = newCustom;
+                                    _customStatusController.clear();
+                                    FocusScope.of(context).unfocus();
+                                  });
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 14),
+                                decoration: BoxDecoration(
+                                    color: const Color(0xFF0F172A),
+                                    borderRadius: BorderRadius.circular(12)),
+                                child: Text('ADD',
+                                    style: GoogleFonts.inter(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white)),
+                              ),
+                            )
+                          ],
+                        )
+                      ],
                     ),
-                    onPressed: () => _updateStatus(selectedStatus),
-                    child: Text('Confirm Update',
-                        style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white)),
                   ),
-                ),
-              ],
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0EB562),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                        elevation: 4,
+                      ),
+                      onPressed: () => _updateStatus(selectedStatus),
+                      child: Text('Confirm Update',
+                          style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         });
@@ -354,13 +449,12 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
     );
   }
 
-  // Widget Bantuan untuk List Status di Pop-up
   Widget _buildStatusOption(String title, Color bgColor, Color iconColor,
       String selectedStatus, VoidCallback onTap) {
     bool isSelected = selectedStatus == title;
     return GestureDetector(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque, // Pastikan area kosong bisa diklik
+      behavior: HitTestBehavior.opaque,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
@@ -411,7 +505,6 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
     );
   }
 
-  // --- HALAMAN UTAMA (DETAIL VIEW) ---
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -444,7 +537,6 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
               flex: 1,
               child: OutlinedButton(
                 onPressed: () async {
-                  // Arahkan ke halaman Add Screen TAPI bawa data currentJob-nya!
                   final updatedData = await Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -453,11 +545,9 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
                     ),
                   );
 
-                  // Jika halaman edit mengembalikan data baru (artinya berhasil di-save)
                   if (updatedData != null && updatedData is ApplicationModel) {
                     setState(() {
-                      currentJob =
-                          updatedData; // Langsung refresh UI Detail ini!
+                      currentJob = updatedData;
                     });
                   }
                 },
@@ -573,7 +663,6 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
     );
   }
 
-  // Widget Bantuan untuk buat Kartu Notes/Evaluasi
   Widget _buildInfoCard(String title, String content) {
     return Container(
       width: double.infinity,
