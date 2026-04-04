@@ -9,9 +9,11 @@ import '../../data/models/application_model.dart';
 import 'package:intl/intl.dart';
 
 class CustomScheduleScreen extends StatefulWidget {
-  final ApplicationModel job;
+  // 1. UBAH JADI OPSIONAL (Tanda tanya '?' di belakang tipenya)
+  final ApplicationModel? job;
 
-  const CustomScheduleScreen({super.key, required this.job});
+  // 2. HAPUS KATA 'required'
+  const CustomScheduleScreen({super.key, this.job});
 
   @override
   State<CustomScheduleScreen> createState() => _CustomScheduleScreenState();
@@ -24,10 +26,13 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
   bool isReminderOn = true;
   String reminderTime = '1 hour before';
 
-  // State baru untuk Activity Type
   String selectedActivity = 'Online Test';
   final TextEditingController _customActivityController =
       TextEditingController();
+
+  // 3. CONTROLLER BARU: Buat input manual kalau gak ada data Job
+  final TextEditingController _companyController = TextEditingController();
+  final TextEditingController _roleController = TextEditingController();
 
   final List<String> predefinedActivities = [
     'Online Test',
@@ -38,8 +43,20 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // 4. Kalau bawa data Job (dari detail), otomatis isikan.
+    if (widget.job != null) {
+      _companyController.text = widget.job!.company;
+      _roleController.text = widget.job!.role;
+    }
+  }
+
+  @override
   void dispose() {
     _customActivityController.dispose();
+    _companyController.dispose();
+    _roleController.dispose();
     super.dispose();
   }
 
@@ -51,7 +68,7 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF137FEC), // Warna biru sesuai Figma baru
+              primary: Color(0xFF137FEC),
               onPrimary: Colors.white,
               onSurface: Color(0xFF0F172A),
             ),
@@ -66,20 +83,28 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
   }
 
   Future<void> _saveSchedule() async {
-    // Ambil nama aktivitas final (dari chip pilihan ATAU dari input custom)
+    // Validasi kalau input manual kosong
+    if (_companyController.text.trim().isEmpty ||
+        _roleController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter company name and role!')),
+      );
+      return;
+    }
+
     String finalActivity = _customActivityController.text.trim().isNotEmpty
         ? _customActivityController.text.trim()
         : selectedActivity;
 
     final newSchedule = ScheduleModel(
-      jobId: widget.job.id!,
-      company: widget.job.company,
-      role: widget.job.role,
+      // Kalau nggak ada job ID, kasih nilai default acak pakai waktu
+      jobId: widget.job?.id ?? DateTime.now().millisecondsSinceEpoch,
+      company: _companyController.text.trim(),
+      role: _roleController.text.trim(),
       date: DateFormat('MMM dd, yyyy').format(selectedDate),
       time: selectedTime.format(context),
       platform: selectedPlatform,
-      status:
-          'UPCOMING', // Atau kamu bisa simpan finalActivity di database kalau ada fieldnya
+      status: 'UPCOMING',
     );
 
     final interviewDateTime = DateTime(
@@ -90,10 +115,9 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
       selectedTime.minute,
     );
 
-    // Set Notifikasi (Bisa dimodif pesannya biar dinamis sesuai aktivitas)
     await NotificationService().scheduleInterviewReminder(
       id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
-      companyName: "${widget.job.company} ($finalActivity)",
+      companyName: "${_companyController.text} ($finalActivity)",
       interviewDate: interviewDateTime,
     );
 
@@ -102,19 +126,14 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content:
-              Text('$finalActivity scheduled for ${widget.job.company}! 📅'),
-          backgroundColor: const Color(0xFF137FEC), // Biru Figma
+          content: Text(
+              '$finalActivity scheduled for ${_companyController.text}! 📅'),
+          backgroundColor: const Color(0xFF137FEC),
         ),
       );
 
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const MainLayout(initialIndex: 2),
-        ),
-        (route) => false,
-      );
+      // Balik ke layar sebelumnya (jangan hapus routingnya)
+      Navigator.pop(context);
     }
   }
 
@@ -144,7 +163,7 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
         child: ElevatedButton(
           onPressed: _saveSchedule,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF137FEC), // Biru Figma
+            backgroundColor: const Color(0xFF137FEC),
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -162,6 +181,67 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // --- BAGIAN BARU: INPUT PERUSAHAAN & POSISI ---
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('COMPANY NAME',
+                      style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF64748B))),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _companyController,
+                    readOnly:
+                        widget.job != null, // Kunci input kalau dari lamaran
+                    decoration: InputDecoration(
+                      hintText: 'e.g. Google, Gojek, etc.',
+                      filled: true,
+                      fillColor: widget.job != null
+                          ? const Color(0xFFF1F5F9)
+                          : Colors.white,
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text('ROLE / POSITION',
+                      style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF64748B))),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _roleController,
+                    readOnly:
+                        widget.job != null, // Kunci input kalau dari lamaran
+                    decoration: InputDecoration(
+                      hintText: 'e.g. Frontend Developer',
+                      filled: true,
+                      fillColor: widget.job != null
+                          ? const Color(0xFFF1F5F9)
+                          : Colors.white,
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
             // 1. CALENDAR DATE PICKER (Asli Flutter)
             Container(
               decoration: BoxDecoration(
@@ -241,7 +321,7 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
             ),
             const SizedBox(height: 24),
 
-            // 4. ACTIVITY TYPE (CHIPS & CUSTOM INPUT)
+            // 4. ACTIVITY TYPE
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -287,8 +367,7 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
                     if (selected) {
                       setState(() {
                         selectedActivity = activity;
-                        _customActivityController
-                            .clear(); // Hapus custom jika milih chip
+                        _customActivityController.clear();
                         FocusScope.of(context).unfocus();
                       });
                     }
@@ -297,13 +376,11 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
               }).toList(),
             ),
             const SizedBox(height: 12),
-            // Custom Activity Input
             TextField(
               controller: _customActivityController,
               onChanged: (val) {
                 if (val.isNotEmpty) {
-                  setState(() => selectedActivity =
-                      ''); // Kosongkan chip jika user ngetik custom
+                  setState(() => selectedActivity = '');
                 }
               },
               decoration: InputDecoration(
@@ -321,69 +398,6 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
                 focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: Color(0xFF137FEC))),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // 5. JOB DETAILS (READ-ONLY)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFF1F5F9)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('LINK TO APPLICATION',
-                      style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF64748B),
-                          letterSpacing: 0.6)),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: const Color(0x19137FEC),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(LucideIcons.briefcase,
-                              color: Color(0xFF137FEC)),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(widget.job.role,
-                                  style: GoogleFonts.inter(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF0F172A))),
-                              const SizedBox(height: 4),
-                              Text(widget.job.company,
-                                  style: GoogleFonts.inter(
-                                      fontSize: 12,
-                                      color: const Color(0xFF64748B))),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
               ),
             ),
             const SizedBox(height: 24),
@@ -485,15 +499,13 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
                 ],
               ),
             ),
-            const SizedBox(
-                height: 100), // Spacing agar tidak tertutup tombol bawah
+            const SizedBox(height: 100),
           ],
         ),
       ),
     );
   }
 
-  // Widget Bantuan: Kartu Pilihan Platform
   Widget _buildPlatformCard(String title) {
     bool isSelected = selectedPlatform == title.replaceAll('\n', '-');
     return GestureDetector(

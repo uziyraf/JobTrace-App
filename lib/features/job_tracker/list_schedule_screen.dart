@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jobtracker/data/models/daos/schedule_dao.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-
+import 'package:jobtracker/features/job_tracker/custom_schedule_screen.dart';
 import '../../data/models/schedule_model.dart';
 
 class ListScheduleScreen extends StatefulWidget {
@@ -94,9 +94,17 @@ class _ListScheduleScreenState extends State<ListScheduleScreen> {
             IconButton(
               icon: const Icon(LucideIcons.calendarPlus,
                   color: Color(0xFF0F172A)),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Add manual schedule coming soon!')));
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CustomScheduleScreen(),
+                  ),
+                );
+
+                // 2. Setelah halaman Custom Schedule ditutup (kembali ke sini),
+                // otomatis panggil fungsi fetch untuk refresh data dari Firebase!
+                _fetchSchedules();
               },
             ),
           ],
