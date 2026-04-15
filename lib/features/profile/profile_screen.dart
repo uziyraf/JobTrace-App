@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:jobtracker/features/habits/habbit_screen.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -215,8 +216,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       value: isDarkMode,
                       activeColor: const Color(0xFF13EC80),
                       onChanged: (v) => setState(() => isDarkMode = v))),
-              _buildPrefTile(LucideIcons.listChecks, "Habit Management",
-                  const Color(0x3322C55E)),
+
+              // --- INI YANG DIGANTI BOSKU ---
+              _buildPrefTile(
+                LucideIcons.listChecks,
+                "Habit Management",
+                const Color(0x3322C55E),
+                onTap: () {
+                  // Arahkan ke Halaman Habit Tracker
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const HabitScreen()),
+                  );
+                },
+              ),
+              // ------------------------------
+
               _buildPrefTile(
                   LucideIcons.user, "Account Details", const Color(0x333B82F6),
                   isLast: true),
@@ -364,45 +380,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ]),
         ],
       );
+
+  // Helpers
   Widget _buildPrefTile(IconData icon, String title, Color bgColor,
-      {Widget? trailing, bool isLast = false}) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      // Perbaikan: Gunakan Border() bukan BorderSide langsung
-      decoration: BoxDecoration(
-        border: isLast
-            ? null
-            : Border(
-                bottom: BorderSide(
-                  // Perbaikan: Gunakan withValues untuk versi terbaru atau withOpacity
-                  color: Colors.black.withValues(alpha: 0.05),
-                  width: 1,
+      {Widget? trailing, bool isLast = false, VoidCallback? onTap}) {
+    // <-- Tambah parameter onTap
+    return InkWell(
+      // <-- Bungkus pakai InkWell biar ada efek kliknya
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: isLast
+              ? null
+              : Border(
+                  bottom: BorderSide(
+                    color: Colors.black
+                        .withOpacity(0.05), // Disesuaikan pakai opacity
+                    width: 1,
+                  ),
                 ),
-              ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: bgColor,
-                  borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, size: 16, color: Colors.indigo),
                 ),
-                child: Icon(icon, size: 16, color: Colors.indigo),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                title,
-                style: GoogleFonts.inter(
-                    fontSize: 15, fontWeight: FontWeight.w500),
-              ),
-            ],
-          ),
-          trailing ?? const Icon(Icons.chevron_right, color: Color(0xFF94A3B8)),
-        ],
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: GoogleFonts.inter(
+                      fontSize: 15, fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+            trailing ??
+                const Icon(Icons.chevron_right, color: Color(0xFF94A3B8)),
+          ],
+        ),
       ),
     );
   }

@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 import '../../data/models/application_model.dart';
 
 class AddApplicationScreen extends StatefulWidget {
-  // Tambahkan parameter opsional ini. Jika null = Add, jika tidak null = Edit
   final ApplicationModel? job;
 
   const AddApplicationScreen({super.key, this.job});
@@ -29,7 +28,6 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
   @override
   void initState() {
     super.initState();
-    // JIKA DALAM MODE EDIT, ISI OTOMATIS SEMUA KOTAK INPUT!
     if (widget.job != null) {
       _companyController.text = widget.job!.company;
       _positionController.text = widget.job!.role;
