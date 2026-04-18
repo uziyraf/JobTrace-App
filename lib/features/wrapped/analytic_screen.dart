@@ -4,6 +4,7 @@ import 'package:jobtracker/data/models/application_model.dart';
 import 'package:jobtracker/data/models/daos/application_dao.dart';
 import 'package:jobtracker/data/models/daos/habbit_dao.dart';
 import 'package:jobtracker/data/models/habbit_model.dart';
+import 'package:jobtracker/features/wrapped/wrapped_screen.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class AnalyticScreen extends StatefulWidget {
@@ -60,32 +61,26 @@ class _AnalyticScreenState extends State<AnalyticScreen> {
   DateTime? _parseFlexibleDate(String dateStr) {
     if (dateStr.isEmpty) return null;
 
-    // 1. Coba format bawaan Firebase / standar (YYYY-MM-DD)
     try {
       return DateTime.parse(dateStr);
     } catch (e) {}
 
-    // 2. Coba baca format khusus lu: M/D/YYYY atau MM/DD/YYYY
     try {
-      // Ubah semua pemisah jadi garis miring biar gampang dibelah
       String cleanStr =
           dateStr.replaceAll('-', '/').replaceAll('.', '/').trim();
       List<String> parts = cleanStr.split('/');
 
       if (parts.length == 3) {
-        // Karena format lu Month/Day/Year, kita tangkap posisinya dengan benar:
         int month = int.parse(parts[0]); // Bagian pertama = Bulan
         int day = int.parse(parts[1]); // Bagian kedua = Hari
         int year = int.parse(parts[2]); // Bagian ketiga = Tahun
 
-        // Pastikan tahunnya format 4 digit (misal 2026)
         if (year > 1000) {
           return DateTime(year, month, day);
         }
       }
     } catch (e) {}
 
-    // Kalau masih ada format alien yang nyelip, lapor ke terminal!
     print(
         "🚨 [DEBUG TANGGAL] Bos, sistem nyerah baca format tanggal ini: '$dateStr'");
     return null;
@@ -94,7 +89,6 @@ class _AnalyticScreenState extends State<AnalyticScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F8F7),
       body: SafeArea(
         child: FutureBuilder<List<ApplicationModel>>(
             future: _jobsFuture,
@@ -123,7 +117,6 @@ class _AnalyticScreenState extends State<AnalyticScreen> {
                         return parsedDate.month == _selectedMonth.month &&
                             parsedDate.year == _selectedMonth.year;
                       }
-                      // Jika format tanggalnya ngaco banget, terpaksa kita umpetin
                       return false;
                     }).toList();
 
@@ -203,7 +196,8 @@ class _AnalyticScreenState extends State<AnalyticScreen> {
                           const SizedBox(height: 24),
                           _buildHeatmapCard(activeDates),
                           const SizedBox(height: 24),
-                          _buildWrappedCard(),
+                          _buildWrappedCard(totalApplications,
+                              interviewsAndOffers, sourceCount, activeDates),
                           const SizedBox(height: 32),
                         ],
                       ),
@@ -416,7 +410,24 @@ class _AnalyticScreenState extends State<AnalyticScreen> {
     );
   }
 
-  Widget _buildWrappedCard() {
+  Widget _buildWrappedCard(int totalApplications, int interviews,
+      Map<String, int> sourceCount, Set<String> activeDates) {
+    // Hitung Habit Rate (Persentase hari aktif vs jumlah hari dalam sebulan)
+    int daysInMonth =
+        DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0).day;
+    int activeDays = activeDates.length;
+    int habitRate =
+        daysInMonth == 0 ? 0 : ((activeDays / daysInMonth) * 100).toInt();
+
+    // Olah data Sources buat dikirim ke Wrapped Screen
+    var sortedSources = sourceCount.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    List<MapEntry<String, double>> topSourcesList = [];
+    for (var source in sortedSources.take(3)) {
+      double percentage = (source.value / totalApplications) * 100;
+      topSourcesList.add(MapEntry(source.key, percentage));
+    }
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -434,14 +445,30 @@ class _AnalyticScreenState extends State<AnalyticScreen> {
                   fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
           Text(
-              "You're in the top 5% of active job seekers this month. Keep it up!",
+              "Ready to see your hustle recap? Let's unwrap your career progress!",
               style: GoogleFonts.inter(
                   color: const Color(0xFFCBD5E1), fontSize: 14)),
           const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                // NAVIGASI KE LAYAR WRAPPED DENGAN MEMBAWA DATA ASLI
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MonthlyWrappedScreen(
+                      monthName:
+                          _getMonthName(_selectedMonth.month).toUpperCase(),
+                      year: _selectedMonth.year.toString(),
+                      totalApplications: totalApplications,
+                      interviews: interviews,
+                      habitRate: habitRate,
+                      topSources: topSourcesList,
+                    ),
+                  ),
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF13EC80),
                 foregroundColor: const Color(0xFF0F172A),
@@ -449,7 +476,7 @@ class _AnalyticScreenState extends State<AnalyticScreen> {
                     borderRadius: BorderRadius.circular(12)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
-              child: const Text('Share Summary',
+              child: const Text('Open My Wrapped',
                   style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           )

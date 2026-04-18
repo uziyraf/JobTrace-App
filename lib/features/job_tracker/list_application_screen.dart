@@ -40,7 +40,6 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F8F7),
       body: SafeArea(
         child: Column(
           children: [
@@ -231,8 +230,8 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
                         job.role,
                         style: GoogleFonts.inter(
                           fontSize: 16,
-                          fontWeight: FontWeight.bold, // Dibuat tebal
-                          color: const Color(0xFF0F172A), // Warna gelap
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF0F172A),
                         ),
                       ),
 

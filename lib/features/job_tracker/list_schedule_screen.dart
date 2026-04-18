@@ -79,7 +79,6 @@ class _ListScheduleScreenState extends State<ListScheduleScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF6F8F7),
         appBar: AppBar(
           backgroundColor: const Color(0xFFF6F8F7),
           elevation: 0,

@@ -17,7 +17,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F8F7),
       appBar: AppBar(
         backgroundColor: Colors.white.withOpacity(0.6),
         elevation: 0,
@@ -128,10 +127,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   style: GoogleFonts.inter(
                       fontSize: 11, color: const Color(0xFF64748B))),
               const SizedBox(height: 8),
-              // Ganti Row dengan Wrap agar jika tidak muat otomatis turun ke bawah
               Wrap(
-                spacing: 10, // Jarak antar kotak secara horizontal
-                runSpacing: 10, // Jarak antar kotak jika turun ke bawah
+                spacing: 10,
+                runSpacing: 10,
                 children: [
                   _themeThumb("https://placehold.co/60x60", isSelected: true),
                   _themeThumb("https://placehold.co/60x60"),

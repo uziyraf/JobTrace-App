@@ -46,8 +46,6 @@ class _HabitScreenState extends State<HabitScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          const Color(0xFFF8FAFC), // Warna background abu-abu sangat muda
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

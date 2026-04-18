@@ -22,8 +22,36 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Job Tracker',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(useMaterial3: true),
-      home: const MainLayout(), // Gunakan MainLayout di sini
+
+      // 1. UBAH TEMA DI SINI: Bikin semua layar jadi tembus pandang (transparan)
+      theme: ThemeData(
+        useMaterial3: true,
+        scaffoldBackgroundColor: Colors.transparent, // Kunci utamanya!
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+      ),
+
+      // 2. TAMBAH BUILDER DI SINI: Taruh kanvas gradient di lapisan paling bawah aplikasi
+      builder: (context, child) {
+        return Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.bottomLeft,
+              end: Alignment.topRight,
+              colors: [
+                Color(0xFFF3F6EA), // Krem bawah
+                Color(0xFFB5DFD1), // Mint tengah
+                Color(0xFF8DCAC0), // Hijau mint kanan atas
+              ],
+            ),
+          ),
+          child: child, // Ini akan nampilin MainLayout dan isinya
+        );
+      },
+
+      home: const MainLayout(),
     );
   }
 }

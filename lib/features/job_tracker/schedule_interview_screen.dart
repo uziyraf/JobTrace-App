@@ -369,7 +369,6 @@ class _ScheduleInterviewScreenState extends State<ScheduleInterviewScreen> {
     );
   }
 
-  // Widget Bantuan: Kotak Read Only (Untuk Company & Position)
   Widget _buildReadOnlyField(String text, IconData icon) {
     return Container(
       width: double.infinity,
