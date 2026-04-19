@@ -119,7 +119,6 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
     bool isEditing = widget.job != null;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F8F7),
       appBar: AppBar(
         backgroundColor: const Color(0xFFF6F8F7),
         elevation: 0,

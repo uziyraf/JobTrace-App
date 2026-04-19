@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jobtracker/data/models/daos/application_dao.dart';
+import 'package:jobtracker/ui/widgets/glass_card.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:jobtracker/features/job_tracker/detail_application_screen.dart';
-
 import 'package:jobtracker/features/job_tracker/add_application_screen.dart';
 import '../../data/models/application_model.dart';
 
@@ -24,7 +24,7 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
   @override
   void initState() {
     super.initState();
-    _refreshApplications(); // Panggil data saat halaman pertama kali dibuka
+    _refreshApplications();
   }
 
   // 3. FUNGSI UNTUK MENGAMBIL DATA DARI DATABASE
@@ -177,6 +177,23 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
   }
 
   Widget _buildJobCard(ApplicationModel job) {
+    Color getPlatformColor(String platform) {
+      if (platform.toUpperCase() == 'ZOOM') return const Color(0xFF137FEC);
+      if (platform.toUpperCase() == 'MEET') return const Color(0xFF10B981);
+      if (platform.toUpperCase() == 'TEAMS') return const Color(0xFF9333EA);
+      return const Color(0xFF64748B); // Default abu-abu
+    }
+
+    Color getStatusColor(String status) {
+      if (status == 'Interview') return const Color(0xFFB45309);
+      if (status == 'Offer') return const Color(0xFF065F46);
+      if (status == 'Rejected') return const Color.fromARGB(255, 173, 0, 0);
+      return const Color(0xFF1D4ED8);
+    }
+
+    Color platformColor = getPlatformColor(job.platform);
+    Color statusColor = getStatusColor(job.status);
+
     return InkWell(
       onTap: () async {
         final result = await Navigator.push(
@@ -190,26 +207,31 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
           _refreshApplications();
         }
       },
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          color: Colors.white.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFFF1F5F9)),
+          boxShadow: const [
+            BoxShadow(
+                color: Color(0x0C000000), blurRadius: 2, offset: Offset(0, 1))
+          ],
         ),
         child: Column(
           children: [
+            // HEADER CARD
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEEF2F0),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(12)),
                   child: Center(
                     child: Text(
                       job.company.substring(0, 1).toUpperCase(),
@@ -225,47 +247,80 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 1. ROLE DI ATAS (Contoh: "junior dev" - Tebal & Gelap)
-                      Text(
-                        job.role,
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF0F172A),
-                        ),
-                      ),
-
-                      const SizedBox(height: 4),
-
-                      // 2. COMPANY DI BAWAH (Contoh: "amazon" - Tipis & Abu-abu)
-                      Text(
-                        job.company,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400, // Tidak tebal
-                          color: const Color(0xFF64748B), // Warna abu-abu
-                        ),
-                      ),
+                      Text(job.company,
+                          style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF0F172A))),
+                      Text(job.role,
+                          style: GoogleFonts.inter(
+                              fontSize: 14, color: const Color(0xFF64748B))),
                     ],
                   ),
                 ),
-                _buildStatusBadge(job.status),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                      color: platformColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20)),
+                  child: Text(
+                    job.platform,
+                    style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: platformColor,
+                        letterSpacing: 0.5),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("Applied on: ${job.dateApplied}",
-                    style: GoogleFonts.inter(
-                        fontSize: 12, color: const Color(0xFF94A3B8))),
-                Text(job.platform,
-                    style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF13EC80))),
-              ],
-            )
+
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(12)),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Applied on",
+                          style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFF64748B))),
+                      Text(job.dateApplied,
+                          style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF94A3B8))),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                            color: statusColor, shape: BoxShape.circle),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        job.status,
+                        style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: statusColor),
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            ),
           ],
         ),
       ),

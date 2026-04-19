@@ -20,7 +20,6 @@ class DetailApplicationScreen extends StatefulWidget {
 class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
   late ApplicationModel currentJob;
 
-  // Controller untuk input custom status
   final TextEditingController _customStatusController = TextEditingController();
 
   @override
@@ -71,7 +70,6 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
       barrierDismissible: false,
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: Colors.white,
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(
@@ -223,10 +221,8 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
         return true;
       }
 
-      // JIKA MENUJU CUSTOM STATUS BARU
       if (targetLevel == -1) return true;
 
-      // ATURAN STANDAR HIERARKI
       return targetLevel >= currentLevel;
     }
 

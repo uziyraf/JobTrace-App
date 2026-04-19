@@ -5,6 +5,7 @@ import 'package:jobtracker/data/models/daos/application_dao.dart';
 import 'package:jobtracker/data/models/daos/habbit_dao.dart';
 import 'package:jobtracker/data/models/habbit_model.dart';
 import 'package:jobtracker/features/habits/habbit_screen.dart';
+import 'package:jobtracker/ui/widgets/glass_card.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class JobScreen extends StatefulWidget {
@@ -30,7 +31,7 @@ class _JobScreenState extends State<JobScreen> {
             children: [
               _buildHeader(),
               const SizedBox(height: 32),
-              _buildStatsGrid(), // <--- Sekarang angkanya narik dari Firebase!
+              _buildStatsGrid(),
               const SizedBox(height: 24),
               _buildWeeklyActivityCard(),
               const SizedBox(height: 32),
@@ -242,20 +243,8 @@ class _JobScreenState extends State<JobScreen> {
 
   // 3. Weekly Activity
   Widget _buildWeeklyActivityCard() {
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8E5), width: 1),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0C000000),
-            blurRadius: 2,
-            offset: Offset(0, 1),
-          ),
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -410,36 +399,27 @@ class _JobScreenState extends State<JobScreen> {
   }
 
   Widget _habitItem(HabitModel habit, bool isDone) {
-    return InkWell(
+    return GestureDetector(
       onTap: () {
         _habitDao.markHabitDone(habit);
       },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
+      child: GlassCard(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isDone ? const Color(0x3313EC80) : const Color(0xFFE2E8E5),
-            width: 1,
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x0C000000),
-              blurRadius: 2,
-              offset: Offset(0, 1),
-            ),
-          ],
-        ),
+        borderRadius: 12,
+        // Kalau udah dicentang, kacanya dibikin lebih bening/tipis
+        color: isDone
+            ? Colors.white.withOpacity(0.4)
+            : Colors.white.withOpacity(0.6),
         child: Row(
           children: [
             Container(
               width: 24,
               height: 24,
               decoration: BoxDecoration(
-                color: isDone ? const Color(0xFF13EC80) : Colors.white,
+                color: isDone
+                    ? const Color(0xFF13EC80)
+                    : Colors.white.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
                   color: isDone

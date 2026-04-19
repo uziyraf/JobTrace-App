@@ -237,9 +237,13 @@ class _AnalyticScreenState extends State<AnalyticScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(99),
+        color: Colors.white.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFF1F5F9)),
+        boxShadow: const [
+          BoxShadow(
+              color: Color(0x0C000000), blurRadius: 2, offset: Offset(0, 1))
+        ],
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<DateTime>(
@@ -276,8 +280,8 @@ class _AnalyticScreenState extends State<AnalyticScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          color: Colors.white.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFFF1F5F9))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -326,8 +330,8 @@ class _AnalyticScreenState extends State<AnalyticScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          color: Colors.white.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFFF1F5F9))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -355,8 +359,8 @@ class _AnalyticScreenState extends State<AnalyticScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          color: Colors.white.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFFF1F5F9))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -398,7 +402,7 @@ class _AnalyticScreenState extends State<AnalyticScreen> {
                   decoration: BoxDecoration(
                     color: isDone
                         ? const Color(0xFF13EC80)
-                        : const Color(0xFFF1F5F9),
+                        : const Color.fromARGB(255, 99, 99, 99),
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),

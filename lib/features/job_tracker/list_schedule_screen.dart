@@ -152,14 +152,13 @@ class _ListScheduleScreenState extends State<ListScheduleScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(LucideIcons.calendarX,
-                size: 64, color: Color(0xFFCBD5E1)),
+            const Icon(LucideIcons.calendarX, size: 64, color: Color(0000)),
             const SizedBox(height: 16),
             Text("No interviews found.",
                 style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF64748B))),
+                    color: const Color(0000))),
           ],
         ),
       );
@@ -177,9 +176,7 @@ class _ListScheduleScreenState extends State<ListScheduleScreen> {
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: isCompleted
-                ? Colors.white.withValues(alpha: 0.6)
-                : Colors.white,
+            color: Colors.white.withValues(alpha: 0.6),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: const Color(0xFFF1F5F9)),
             boxShadow: const [

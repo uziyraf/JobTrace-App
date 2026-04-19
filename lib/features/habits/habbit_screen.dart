@@ -14,7 +14,6 @@ class HabitScreen extends StatefulWidget {
 class _HabitScreenState extends State<HabitScreen> {
   final HabitDao _habitDao = HabitDao();
 
-  // Helper untuk format tanggal ala Figma (cth: "Tuesday, Oct 24")
   String get _formattedDate {
     final now = DateTime.now();
     const months = [
@@ -123,7 +122,7 @@ class _HabitScreenState extends State<HabitScreen> {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Colors.white.withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: const Color(0xFFF1F5F9)),
                     boxShadow: const [
@@ -307,7 +306,7 @@ class _HabitScreenState extends State<HabitScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFF1F5F9)),
         boxShadow: const [
@@ -396,7 +395,7 @@ class _HabitScreenState extends State<HabitScreen> {
       width: 150,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFF1F5F9)),
         boxShadow: const [

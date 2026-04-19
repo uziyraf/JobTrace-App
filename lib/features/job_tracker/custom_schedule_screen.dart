@@ -9,10 +9,8 @@ import '../../data/models/application_model.dart';
 import 'package:intl/intl.dart';
 
 class CustomScheduleScreen extends StatefulWidget {
-  // 1. UBAH JADI OPSIONAL (Tanda tanya '?' di belakang tipenya)
   final ApplicationModel? job;
 
-  // 2. HAPUS KATA 'required'
   const CustomScheduleScreen({super.key, this.job});
 
   @override
@@ -83,7 +81,6 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
   }
 
   Future<void> _saveSchedule() async {
-    // Validasi kalau input manual kosong
     if (_companyController.text.trim().isEmpty ||
         _roleController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -97,7 +94,6 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
         : selectedActivity;
 
     final newSchedule = ScheduleModel(
-      // Kalau nggak ada job ID, kasih nilai default acak pakai waktu
       jobId: widget.job?.id ?? DateTime.now().millisecondsSinceEpoch,
       company: _companyController.text.trim(),
       role: _roleController.text.trim(),
@@ -140,7 +136,6 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7F8),
       appBar: AppBar(
         backgroundColor: const Color(0xFFF6F7F8),
         elevation: 0,
@@ -185,8 +180,8 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                color: Colors.white.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
               child: Column(
@@ -196,7 +191,7 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
                       style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFF64748B))),
+                          color: const Color.fromARGB(255, 0, 0, 0))),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _companyController,
@@ -219,7 +214,7 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
                       style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFF64748B))),
+                          color: const Color.fromARGB(255, 0, 0, 0))),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _roleController,
@@ -245,8 +240,8 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
             // 1. CALENDAR DATE PICKER (Asli Flutter)
             Container(
               decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.white.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(16),
                   boxShadow: const [
                     BoxShadow(
                         color: Color(0x07000000),
@@ -274,8 +269,8 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(16),
                     boxShadow: const [
                       BoxShadow(
                           color: Color(0x07000000),
@@ -405,7 +400,7 @@ class _CustomScheduleScreenState extends State<CustomScheduleScreen> {
             // 6. SET REMINDER
             Container(
               decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Colors.white.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: const Color(0xFFF1F5F9)),
                   boxShadow: const [
