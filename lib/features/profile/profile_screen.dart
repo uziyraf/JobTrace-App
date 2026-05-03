@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:jobtracker/features/habits/habbit_screen.dart';
+import 'package:jobtracker/features/profile/skill_screen.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // IMPORT FIREBASE AUTH
+import 'package:jobtracker/features/habits/habbit_screen.dart';
+// Nanti import halaman skill lu di sini:
+// import 'package:jobtracker/features/skills/skill_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -13,6 +17,9 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool isDarkMode = false;
   double cardTransparency = 0.7;
+
+  // Ambil data user yang lagi login
+  final User? currentUser = FirebaseAuth.instance.currentUser;
 
   @override
   Widget build(BuildContext context) {
@@ -54,8 +61,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // 1. Profile Header (Foto, Nama, Label)
+  // 1. Profile Header (FOTO DAN NAMA DARI GOOGLE)
   Widget _buildProfileHeader() {
+    // Ambil nama dari Google, kalau kosong kasih default 'Job Seeker'
+    String displayName = currentUser?.displayName ?? 'Job Seeker';
+    // Ambil email dari Google
+    String email = currentUser?.email ?? 'No email linked';
+    // Ambil foto dari Google, kalau kosong pakai foto default
+    String photoUrl = currentUser?.photoURL ??
+        "https://ui-avatars.com/api/?name=${displayName.replaceAll(' ', '+')}&background=random";
+
     return Column(
       children: [
         Stack(
@@ -67,10 +82,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 shape: BoxShape.circle,
                 border:
                     Border.all(color: Colors.white.withOpacity(0.5), width: 4),
-                image: const DecorationImage(
-                    image:
-                        NetworkImage("https://i.pravatar.cc/150?u=alex_rivera"),
-                    fit: BoxFit.cover),
+                image: DecorationImage(
+                    image: NetworkImage(photoUrl), fit: BoxFit.cover),
               ),
             ),
             Positioned(
@@ -88,12 +101,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        Text('Alex Rivera',
+        Text(displayName,
             style: GoogleFonts.inter(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
                 color: const Color(0xFF0F172A))),
         const SizedBox(height: 4),
+        Text(email, // TAMPILIN EMAIL DI BAWAH NAMA
+            style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: const Color(0xFF64748B))),
+        const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
@@ -197,7 +216,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // 4. App Preferences (Dark Mode, Account)
+  // 4. App Preferences (Dark Mode, Skills, Habit, Account)
   Widget _buildAppPreferences() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -208,6 +227,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           decoration: _cardDecoration(),
           child: Column(
             children: [
+              // DARK MODE
               _buildPrefTile(
                   LucideIcons.moon, "Dark Mode", const Color(0x336366F1),
                   trailing: Switch(
@@ -215,22 +235,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       activeColor: const Color(0xFF13EC80),
                       onChanged: (v) => setState(() => isDarkMode = v))),
 
-              // --- INI YANG DIGANTI BOSKU ---
+              // MENU MY SKILLS (BARU)
+              _buildPrefTile(
+                LucideIcons.code, // Icon code/skill
+                "My Skills",
+                const Color(0x33F59E0B), // Warna orange
+                onTap: () {
+                  // Nanti arahin ke halaman SkillScreen
+                  // Navigator.push(context, MaterialPageRoute(builder: (context) => const SkillScreen()));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Halaman My Skills belum dibuat')),
+                  );
+                },
+              ),
+
+              // HABIT MANAGEMENT
               _buildPrefTile(
                 LucideIcons.listChecks,
                 "Habit Management",
                 const Color(0x3322C55E),
                 onTap: () {
-                  // Arahkan ke Halaman Habit Tracker
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const HabitScreen()),
+                        builder: (context) => const SkillScreen()),
                   );
                 },
               ),
-              // ------------------------------
 
+              // ACCOUNT DETAILS
               _buildPrefTile(
                   LucideIcons.user, "Account Details", const Color(0x333B82F6),
                   isLast: true),
@@ -287,11 +321,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // 6. LOGOUT BUTTON
   Widget _buildSignOutButton() {
     return SizedBox(
       width: double.infinity,
       child: TextButton(
-        onPressed: () {},
+        onPressed: () async {
+          // Fungsi Sign Out dari Firebase
+          await FirebaseAuth.instance.signOut();
+          // Nanti arahin balik ke halaman Login
+          // Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const LoginScreen()));
+        },
         style: TextButton.styleFrom(
             padding: const EdgeInsets.all(16),
             shape: RoundedRectangleBorder(
@@ -306,7 +346,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Helpers
+  // --- HELPERS ---
   Widget _buildSectionTitle(String title, {bool showSeeAll = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -379,12 +419,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       );
 
-  // Helpers
   Widget _buildPrefTile(IconData icon, String title, Color bgColor,
       {Widget? trailing, bool isLast = false, VoidCallback? onTap}) {
-    // <-- Tambah parameter onTap
     return InkWell(
-      // <-- Bungkus pakai InkWell biar ada efek kliknya
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -393,8 +430,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ? null
               : Border(
                   bottom: BorderSide(
-                    color: Colors.black
-                        .withOpacity(0.05), // Disesuaikan pakai opacity
+                    color: Colors.black.withOpacity(0.05),
                     width: 1,
                   ),
                 ),

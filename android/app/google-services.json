@@ -12,7 +12,20 @@
           "package_name": "com.example.jobtracker"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "784736483376-lgbhmhhifpj5b19mqpe4fboav0t38hr9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.jobtracker",
+            "certificate_hash": "04556219ebed23afd1891cf4c4a7efa709d9b02f"
+          }
+        },
+        {
+          "client_id": "784736483376-j72u78oo0co90iicicnhes3gj8q7ah6q.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD1-izJZcFYKU0jn81vyykn6CuXa2v66aE"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "784736483376-j72u78oo0co90iicicnhes3gj8q7ah6q.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "784736483376-6a0lfrfiq7h4gmeo9svvsoo94j5fn1qi.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.jobtracker"
+              }
+            }
+          ]
         }
       }
     }
