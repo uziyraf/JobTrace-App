@@ -4,7 +4,10 @@ import 'package:jobtracker/data/models/daos/habbit_dao.dart';
 import 'package:jobtracker/data/models/habbit_model.dart';
 
 class AddHabitScreen extends StatefulWidget {
-  const AddHabitScreen({super.key});
+  // 1. TAMBAHIN PARAMETER INI BUAT NERIMA DATA EDIT
+  final HabitModel? habitToEdit;
+
+  const AddHabitScreen({super.key, this.habitToEdit});
 
   @override
   State<AddHabitScreen> createState() => _AddHabitScreenState();
@@ -18,7 +21,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   bool _isReminderOn = false;
 
   // Variabel untuk Fitur Frekuensi
-  String _selectedFrequency = 'Daily'; // Default
+  String _selectedFrequency = 'Daily';
   final List<String> _frequencyOptions = [
     'Daily',
     'Weekdays (Senin - Jumat)',
@@ -26,14 +29,39 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     'Weekly',
     'Bi-weekly',
     'Monthly',
-    'Custom...' // Opsi untuk frekuensi khusus
+    'Custom...'
   ];
+
+  // Cek apakah ini mode edit atau tambah baru
+  bool get isEditMode => widget.habitToEdit != null;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (isEditMode) {
+      final habit = widget.habitToEdit!;
+      _nameController.text = habit.habitName;
+      _selectedFrequency = habit.frequency;
+      _isReminderOn = habit.isReminderOn;
+
+      if (habit.reminderTime != null && habit.reminderTime!.isNotEmpty) {
+        final parts = habit.reminderTime!.split(':');
+        if (parts.length == 2) {
+          _selectedTime = TimeOfDay(
+            hour: int.tryParse(parts[0]) ?? 0,
+            minute: int.tryParse(parts[1]) ?? 0,
+          );
+        }
+      }
+    }
+  }
 
   // 1. Fungsi buat milih jam
   Future<void> _selectTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.now(),
+      initialTime: _selectedTime ?? TimeOfDay.now(),
     );
     if (picked != null && picked != _selectedTime) {
       setState(() {
@@ -44,8 +72,8 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
 
   // 2. Fungsi Pop-up Custom Frekuensi (Muncul kalau pilih "Custom...")
   void _showCustomFrequencyDialog() {
-    int interval = 2; // Default angka
-    String unit = 'Hari'; // Default satuan
+    int interval = 2;
+    String unit = 'Hari';
 
     showDialog(
         context: context,
@@ -60,7 +88,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                 children: [
                   Text('Setiap ', style: GoogleFonts.inter(fontSize: 16)),
                   const SizedBox(width: 8),
-                  // Dropdown Angka (1 sampai 30)
                   DropdownButton<int>(
                     value: interval,
                     items: List.generate(30, (i) => i + 1)
@@ -70,7 +97,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                     onChanged: (val) => setStateDialog(() => interval = val!),
                   ),
                   const SizedBox(width: 8),
-                  // Dropdown Satuan Waktu
                   DropdownButton<String>(
                     value: unit,
                     items: ['Hari', 'Minggu', 'Bulan']
@@ -90,7 +116,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                   style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF005DB5)),
                   onPressed: () {
-                    // Simpan hasil custom ke variabel utama
                     setState(() {
                       _selectedFrequency = 'Setiap $interval $unit';
                     });
@@ -110,17 +135,14 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
-      isScrollControlled:
-          true, // <--- MAGIC TRICK 1: Biar bisa lebih tinggi dari batas wajar
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         return Container(
-          // Tambahin padding bawah nyesuaiin layar HP biar gak ketutup tombol navigasi Android
           padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).padding.bottom, top: 24),
-          // <--- MAGIC TRICK 2: Bungkus pakai SingleChildScrollView biar bisa di-scroll!
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -144,18 +166,18 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                                   color: Colors.grey),
                           onTap: () {
                             if (freq == 'Custom...') {
-                              Navigator.pop(context); // Tutup bottom sheet dulu
-                              _showCustomFrequencyDialog(); // Buka pop-up angka
+                              Navigator.pop(context);
+                              _showCustomFrequencyDialog();
                             } else {
                               setState(() {
                                 _selectedFrequency = freq;
                               });
-                              Navigator.pop(context); // Tutup bottom sheet
+                              Navigator.pop(context);
                             }
                           },
                         ))
                     .toList(),
-                const SizedBox(height: 16), // Spasi ekstra di bawah biar lega
+                const SizedBox(height: 16),
               ],
             ),
           ),
@@ -164,7 +186,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     );
   }
 
-  // 4. Fungsi Simpan Data ke Database
+  // 4. Fungsi Simpan / Update Data ke Database
   Future<void> _saveHabit() async {
     if (_nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -181,19 +203,31 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
           '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}';
     }
 
-    // Pastikan HabitModel lu udah ditambahin variabel 'frequency' ya bos!
-    final newHabit = HabitModel(
-      userId: '',
-      habitName: _nameController.text.trim(),
-      reminderTime: timeString,
-      isReminderOn: _isReminderOn,
-      frequency: _selectedFrequency,
-    );
-
     try {
-      await _habitDao.addHabit(newHabit);
+      if (isEditMode) {
+        // UPDATE HABIT YANG SUDAH ADA
+        final updatedHabit = widget.habitToEdit!;
+        updatedHabit.habitName = _nameController.text.trim();
+        updatedHabit.reminderTime = timeString;
+        updatedHabit.isReminderOn = _isReminderOn;
+        updatedHabit.frequency = _selectedFrequency;
+
+        await _habitDao.updateHabit(updatedHabit);
+      } else {
+        // BIKIN HABIT BARU
+        final newHabit = HabitModel(
+          userId: '',
+          habitName: _nameController.text.trim(),
+          reminderTime: timeString,
+          isReminderOn: _isReminderOn,
+          frequency: _selectedFrequency,
+        );
+
+        await _habitDao.addHabit(newHabit);
+      }
+
       if (mounted) {
-        Navigator.pop(context); // Tutup halaman kalau sukses
+        Navigator.pop(context);
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -215,7 +249,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Habit Details',
+          isEditMode ? 'Edit Habit' : 'Habit Details',
           style: GoogleFonts.manrope(
             color: const Color(0xFF2B3437),
             fontSize: 18,
@@ -495,7 +529,8 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  'SAVE HABIT',
+                  // Ubah Teks Tombol tergantung mode
+                  isEditMode ? 'UPDATE HABIT' : 'SAVE HABIT',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.manrope(
                     color: Colors.white,

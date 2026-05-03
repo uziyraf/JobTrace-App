@@ -77,7 +77,6 @@ class _HabitScreenState extends State<HabitScreen> {
 
           final habits = snapshot.data ?? [];
 
-          // Hitung Progress Harian
           final today = DateTime.now();
           int completedToday = 0;
           for (var h in habits) {
@@ -98,7 +97,6 @@ class _HabitScreenState extends State<HabitScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // HEADER TEXT
                 Text(
                   'Daily Habits',
                   style: GoogleFonts.inter(
@@ -134,7 +132,6 @@ class _HabitScreenState extends State<HabitScreen> {
                   ),
                   child: Row(
                     children: [
-                      // Circular Progress (Bukan Matrix4 kaku dari Figma)
                       SizedBox(
                         width: 70,
                         height: 70,
@@ -237,7 +234,6 @@ class _HabitScreenState extends State<HabitScreen> {
                         const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final habit = habits[index];
-                      // Cek status hari ini
                       bool isDoneToday = false;
                       if (habit.lastCompletedDate != null) {
                         isDoneToday =
@@ -246,12 +242,107 @@ class _HabitScreenState extends State<HabitScreen> {
                                 habit.lastCompletedDate!.day == today.day;
                       }
 
-                      return _buildActiveHabitCard(habit, isDoneToday);
+                      return Dismissible(
+                        key: Key(habit.id ?? habit.habitName),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.redAccent.shade200,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(Icons.delete_outline,
+                              color: Colors.white, size: 28),
+                        ),
+
+                        // TAMBAHIN BAGIAN INI BUAT POP UP KONFIRMASI
+                        confirmDismiss: (direction) async {
+                          return await showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                title: Text(
+                                  'Hapus Habit?',
+                                  style: GoogleFonts.inter(
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF0F172A),
+                                  ),
+                                ),
+                                content: Text(
+                                  'Yakin mau hapus habit "${habit.habitName}"? Data yang dihapus nggak bisa dikembalikan.',
+                                  style: GoogleFonts.inter(
+                                    color: const Color(0xFF64748B),
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(
+                                        false), // Return false = batal hapus
+                                    child: Text(
+                                      'Batal',
+                                      style: GoogleFonts.inter(
+                                        color: const Color(0xFF64748B),
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () => Navigator.of(context).pop(
+                                        true), // Return true = lanjut hapus
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.redAccent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      elevation: 0,
+                                    ),
+                                    child: Text(
+                                      'Hapus',
+                                      style: GoogleFonts.inter(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                        // onDismissed BARU DIJALANKAN KALAU CONFIRMDISMISS RETURN TRUE
+                        onDismissed: (direction) {
+                          _habitDao.deleteHabit(habit);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('${habit.habitName} dihapus'),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                        child: _buildActiveHabitCard(
+                          habit,
+                          isDoneToday,
+                          () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    AddHabitScreen(habitToEdit: habit),
+                              ),
+                            );
+                          },
+                        ),
+                      );
                     },
                   ),
                 const SizedBox(height: 32),
 
-                // SUGGESTED HABITS SECTION
+                // SUGGESTED HABITS
                 Text(
                   'Suggested Habits',
                   style: GoogleFonts.inter(
@@ -277,15 +368,12 @@ class _HabitScreenState extends State<HabitScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(
-                    height: 100), // Spasi buat Floating Action Button
+                const SizedBox(height: 100),
               ],
             ),
           );
         },
       ),
-
-      // FLOATING ACTION BUTTON
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -301,95 +389,97 @@ class _HabitScreenState extends State<HabitScreen> {
     );
   }
 
-  // WIDGET CARD UNTUK ACTIVE HABIT DARI FIREBASE
-  Widget _buildActiveHabitCard(HabitModel habit, bool isDoneToday) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 2, offset: Offset(0, 1))
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: isDoneToday
-                  ? const Color(0xFF13ECDA).withOpacity(0.15)
-                  : const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(Icons.task_alt,
-                color: isDoneToday
-                    ? const Color(0xFF13ECDA)
-                    : const Color(0xFF94A3B8)),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  habit.habitName,
-                  style: GoogleFonts.inter(
-                    color: const Color(0xFF0F172A),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    decoration: isDoneToday
-                        ? TextDecoration.lineThrough
-                        : TextDecoration.none,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '🔥 STREAK: ${habit.currentStreak}',
-                    style: GoogleFonts.inter(
-                      color: const Color(0xFF94A3B8),
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Custom Checkbox ala Figma
-          InkWell(
-            onTap: () => _habitDao.markHabitDone(habit),
-            borderRadius: BorderRadius.circular(24),
-            child: Container(
-              width: 32,
-              height: 32,
+  Widget _buildActiveHabitCard(
+      HabitModel habit, bool isDoneToday, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFF1F5F9)),
+          boxShadow: const [
+            BoxShadow(
+                color: Colors.black12, blurRadius: 2, offset: Offset(0, 1))
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
                 color: isDoneToday
-                    ? const Color(0xFF13ECDA)
-                    : const Color(0xFFE2E8F0),
-                shape: BoxShape.circle,
+                    ? const Color(0xFF13ECDA).withOpacity(0.15)
+                    : const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: isDoneToday
-                  ? const Icon(Icons.check, color: Colors.white, size: 18)
-                  : null,
+              child: Icon(Icons.task_alt,
+                  color: isDoneToday
+                      ? const Color(0xFF13ECDA)
+                      : const Color(0xFF94A3B8)),
             ),
-          ),
-        ],
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    habit.habitName,
+                    style: GoogleFonts.inter(
+                      color: const Color(0xFF0F172A),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      decoration: isDoneToday
+                          ? TextDecoration.lineThrough
+                          : TextDecoration.none,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '🔥 STREAK: ${habit.currentStreak}',
+                      style: GoogleFonts.inter(
+                        color: const Color(0xFF94A3B8),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            GestureDetector(
+              onTap: () => _habitDao.markHabitDone(habit),
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: isDoneToday
+                      ? const Color(0xFF13ECDA)
+                      : const Color(0xFFE2E8F0),
+                  shape: BoxShape.circle,
+                ),
+                child: isDoneToday
+                    ? const Icon(Icons.check, color: Colors.white, size: 18)
+                    : null,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  // WIDGET CARD UNTUK SUGGESTED HABITS
   Widget _buildSuggestedHabitCard(String title, IconData icon) {
     return Container(
       width: 150,
@@ -427,7 +517,6 @@ class _HabitScreenState extends State<HabitScreen> {
           const SizedBox(height: 16),
           InkWell(
             onTap: () {
-              // Langsung masukin ke Firebase kalau di klik "Add"
               _habitDao.addHabit(HabitModel(
                   userId: '', habitName: title.replaceAll('\n', ' ')));
               ScaffoldMessenger.of(context).showSnackBar(

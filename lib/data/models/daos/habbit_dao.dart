@@ -27,6 +27,12 @@ class HabitDao {
     });
   }
 
+  Future<void> updateHabit(HabitModel habit) async {
+    if (habit.id != null) {
+      await _habitCollection.doc(habit.id).update(habit.toMap());
+    }
+  }
+
   // UPDATE: Fungsi buat Checklist Habit (Hitung Streak!)
   Future<void> markHabitDone(HabitModel habit) async {
     final now = DateTime.now();
@@ -67,8 +73,10 @@ class HabitDao {
     });
   }
 
-  // DELETE: Hapus Habit
-  Future<void> deleteHabit(String id) async {
-    await _habitCollection.doc(id).delete();
+  // DELETE: Hapus Habit (Parameternya diubah jadi HabitModel biar pas sama UI)
+  Future<void> deleteHabit(HabitModel habit) async {
+    if (habit.id != null) {
+      await _habitCollection.doc(habit.id).delete();
+    }
   }
 }

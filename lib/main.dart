@@ -41,13 +41,14 @@ class MyApp extends StatelessWidget {
               begin: Alignment.bottomLeft,
               end: Alignment.topRight,
               colors: [
+                // <--- KURUNG SIKU BUKA INI
                 Color(0xFFF3F6EA), // Krem bawah
                 Color(0xFFB5DFD1), // Mint tengah
                 Color(0xFF8DCAC0), // Hijau mint kanan atas
               ],
             ),
           ),
-          child: child, // Ini akan nampilin MainLayout dan isinya
+          child: child,
         );
       },
 

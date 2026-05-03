@@ -4,7 +4,6 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
-  // Singleton pattern biar hemat memori
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
@@ -12,10 +11,10 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
-  // 1. FUNGSI INISIALISASI
   Future<void> init() async {
     // Setup timezone dasar
     tz.initializeTimeZones();
+    tz.setLocalLocation(tz.getLocation('Asia/Jakarta'));
 
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -53,7 +52,7 @@ class NotificationService {
 
       const AndroidNotificationDetails androidDetails =
           AndroidNotificationDetails(
-        'jalur_skripsi_baru_v1', // 1. UBAH ID INI! Biar Android bikin jalur yang 100% baru & bersih
+        'jalur_skripsi_baru_v1',
         'Interview Reminders',
         channelDescription: 'Reminds you to update interview status',
         importance: Importance.max,
@@ -87,6 +86,56 @@ class NotificationService {
       print("✅ [NOTIF LOG] SUKSES! Jadwal 10 detik berhasil ditanam ke HP.");
     } catch (e) {
       print("🚨 [NOTIF ERROR] GAGAL! Penyebabnya: $e");
+    }
+  }
+
+  Future<void> scheduleDailyHabitReminder({
+    required int id,
+    required String habitName,
+    required int hour,
+    required int minute,
+  }) async {
+    try {
+      await requestPermission();
+
+      final now = tz.TZDateTime.now(tz.local);
+      var scheduledDate = tz.TZDateTime(
+        tz.local,
+        now.year,
+        now.month,
+        now.day,
+        hour,
+        minute,
+      );
+
+      // Kalau jamnya udah lewat hari ini, lempar ke besok
+      if (scheduledDate.isBefore(now)) {
+        scheduledDate = scheduledDate.add(const Duration(days: 1));
+      }
+
+      print("🔔 [NOTIF LOG] Habit '$habitName' diset ke: $scheduledDate");
+
+      await _notificationsPlugin.zonedSchedule(
+        id: id,
+        title: 'Waktunya Habit: $habitName! 🔥',
+        body: 'Yuk selesaikan sekarang agar streak tetap terjaga!',
+        scheduledDate: scheduledDate,
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'habit_channel_id', // ID Channel bebas tapi unik
+            'Habit Reminders',
+            importance: Importance.max,
+            priority: Priority.high,
+          ),
+        ),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        matchDateTimeComponents:
+            DateTimeComponents.time, // Biar tiap hari jam segini
+      );
+
+      print("✅ [NOTIF LOG] Berhasil ditanam!");
+    } catch (e) {
+      print("🚨 [NOTIF ERROR] Gagal: $e");
     }
   }
 }
