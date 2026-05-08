@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Wajib import ini buat narik data profil
 import 'package:jobtracker/data/models/application_model.dart';
 import 'package:jobtracker/data/models/daos/application_dao.dart';
 import 'package:jobtracker/data/models/daos/habbit_dao.dart';
@@ -19,6 +20,9 @@ class _JobScreenState extends State<JobScreen> {
   // Panggil Pawang Firebase
   final HabitDao _habitDao = HabitDao();
   final ApplicationDao _applicationDao = ApplicationDao();
+
+  // Ambil data user yang lagi login saat ini
+  final User? currentUser = FirebaseAuth.instance.currentUser;
 
   @override
   Widget build(BuildContext context) {
@@ -43,8 +47,26 @@ class _JobScreenState extends State<JobScreen> {
     );
   }
 
-  // 1. Header (Profil & Notifikasi)
+  // 1. Header (Profil & Notifikasi) -> SEKARANG DINAMIS!
   Widget _buildHeader() {
+    // Tarik nama, kalau kosong kasih default 'Job Seeker'
+    String displayName = currentUser?.displayName ?? 'Job Seeker';
+
+    // Tarik foto dari Google, kalau nggak ada (misal daftar manual), bikinin avatar inisial
+    String photoUrl = currentUser?.photoURL ??
+        "https://ui-avatars.com/api/?name=${displayName.replaceAll(' ', '+')}&background=13EC80&color=fff";
+
+    // Bikin sapaan dinamis berdasarkan jam (Pagi/Siang/Sore/Malam)
+    int hour = DateTime.now().hour;
+    String greeting = 'Good Morning,';
+    if (hour >= 12 && hour < 15) {
+      greeting = 'Good Afternoon,';
+    } else if (hour >= 15 && hour < 19) {
+      greeting = 'Good Evening,';
+    } else if (hour >= 19 || hour < 4) {
+      greeting = 'Good Night,';
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -56,8 +78,8 @@ class _JobScreenState extends State<JobScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(color: const Color(0x3313EC80), width: 2),
-                image: const DecorationImage(
-                  image: NetworkImage('https://i.pravatar.cc/150?u=alex'),
+                image: DecorationImage(
+                  image: NetworkImage(photoUrl), // Pakai foto dari Firebase
                   fit: BoxFit.cover,
                 ),
               ),
@@ -67,7 +89,7 @@ class _JobScreenState extends State<JobScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Good Morning,",
+                  greeting, // Sapaan dinamis sesuai jam HP
                   style: GoogleFonts.inter(
                     color: const Color(0xFF5C7066),
                     fontSize: 12,
@@ -75,7 +97,7 @@ class _JobScreenState extends State<JobScreen> {
                   ),
                 ),
                 Text(
-                  "Alex Johnson",
+                  displayName, // Nama asli user
                   style: GoogleFonts.inter(
                     color: const Color(0xFF0D1B14),
                     fontSize: 20,

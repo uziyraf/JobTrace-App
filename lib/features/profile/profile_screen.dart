@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:jobtracker/features/profile/login_screen.dart';
 import 'package:jobtracker/features/profile/skill_screen.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // IMPORT FIREBASE AUTH
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:jobtracker/features/habits/habbit_screen.dart';
-// Nanti import halaman skill lu di sini:
+
 // import 'package:jobtracker/features/skills/skill_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -241,11 +243,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 "My Skills",
                 const Color(0x33F59E0B), // Warna orange
                 onTap: () {
-                  // Nanti arahin ke halaman SkillScreen
-                  // Navigator.push(context, MaterialPageRoute(builder: (context) => const SkillScreen()));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Halaman My Skills belum dibuat')),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const SkillScreen()),
                   );
                 },
               ),
@@ -259,7 +260,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const SkillScreen()),
+                        builder: (context) => const HabitScreen()),
                   );
                 },
               ),
@@ -322,15 +323,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // 6. LOGOUT BUTTON
+  // 6. LOGOUT BUTTON
   Widget _buildSignOutButton() {
     return SizedBox(
       width: double.infinity,
       child: TextButton(
         onPressed: () async {
-          // Fungsi Sign Out dari Firebase
+          // 1. Bersihin sesi Google Sign-In (Penting biar bisa milih akun lagi)
+          await GoogleSignIn().signOut();
+
+          // 2. Fungsi Sign Out dari Firebase
           await FirebaseAuth.instance.signOut();
-          // Nanti arahin balik ke halaman Login
-          // Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const LoginScreen()));
+
+          // 3. Arahin balik ke halaman Login dan hapus semua history halaman
+          if (mounted) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+              (Route<dynamic> route) => false,
+            );
+          }
         },
         style: TextButton.styleFrom(
             padding: const EdgeInsets.all(16),

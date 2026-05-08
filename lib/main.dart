@@ -47,9 +47,9 @@ class MyApp extends StatelessWidget {
               begin: Alignment.bottomLeft,
               end: Alignment.topRight,
               colors: [
-                Color(0xFFF3F6EA), // Krem bawah
-                Color(0xFFB5DFD1), // Mint tengah
-                Color(0xFF8DCAC0), // Hijau mint kanan atas
+                Color.fromRGBO(14, 50, 83, 1), // Krem bawah
+                Color.fromRGBO(25, 181, 165, 1), // Mint tengah
+                Color.fromRGBO(255, 255, 255, 1), // Hijau mint kanan atas
               ],
             ),
           ),

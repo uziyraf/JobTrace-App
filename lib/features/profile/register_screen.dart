@@ -2,41 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:jobtracker/features/job_tracker/job_screen.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:jobtracker/features/habits/habbit_screen.dart';
-
-// --- SERVICE AUTHENTICATION ---
-class AuthService {
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  Future<User?> signInWithGoogle() async {
-    try {
-      // 1. Memulai proses login Google
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-
-      if (googleUser == null) return null;
-
-      // 2. Mendapatkan detail autentikasi
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
-      // 3. Membuat kredensial untuk Firebase
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      // 4. Sign in ke Firebase menggunakan kredensial Google
-      final UserCredential userCredential =
-          await _auth.signInWithCredential(credential);
-      return userCredential.user;
-    } catch (e) {
-      print("Error Google Sign In: $e");
-      return null;
-    }
-  }
-}
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -50,22 +17,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  final AuthService _authService = AuthService();
-
   bool _isLoading = false;
   bool _obscurePassword = true;
 
+  String? _nameError;
+  String? _emailError;
+  String? _passwordError;
+
   Future<void> _register() async {
-    if (_nameController.text.trim().isEmpty ||
-        _emailController.text.trim().isEmpty ||
-        _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Semua kolom harus diisi!'),
-            backgroundColor: Colors.red),
-      );
-      return;
+    setState(() {
+      _nameError = null;
+      _emailError = null;
+      _passwordError = null;
+    });
+
+    bool isValid = true;
+    if (_nameController.text.trim().isEmpty) {
+      setState(() => _nameError = "Nama lengkap wajib diisi");
+      isValid = false;
     }
+    if (_emailController.text.trim().isEmpty) {
+      setState(() => _emailError = "Email tidak boleh kosong");
+      isValid = false;
+    }
+    if (_passwordController.text.isEmpty) {
+      setState(() => _passwordError = "Password tidak boleh kosong");
+      isValid = false;
+    }
+
+    if (!isValid) return;
 
     setState(() => _isLoading = true);
 
@@ -77,204 +57,400 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       await userCredential.user?.updateDisplayName(_nameController.text.trim());
+      await userCredential.user?.reload();
 
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const HabitScreen()),
+          MaterialPageRoute(builder: (context) => const JobScreen()),
           (Route<dynamic> route) => false,
         );
       }
     } on FirebaseAuthException catch (e) {
-      print("KODE ERROR FIREBASE: ${e.code}");
+      setState(() {
+        if (e.code == 'email-already-in-use') {
+          _emailError = "Email ini sudah terdaftar";
+        } else if (e.code == 'weak-password') {
+          _passwordError = "Password terlalu lemah";
+        } else if (e.code == 'invalid-email') {
+          _emailError = "Format email salah";
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Error: ${e.message}'),
+              backgroundColor: Colors.red));
+        }
+      });
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
-      String message = 'Terjadi kesalahan.';
-      if (e.code == 'weak-password') {
-        message = 'Password terlalu lemah.';
-      } else if (e.code == 'email-already-in-use') {
-        message = 'Email sudah dipakai orang lain.';
-      } else if (e.code == 'invalid-email') {
-        message = 'Format email ngawur.';
-      } else {
-        message = "Error: ${e.message}";
+  Future<void> _signUpWithGoogle() async {
+    setState(() => _isLoading = true);
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+
+      final User? user = userCredential.user;
+      if (user != null &&
+          (user.displayName == null || user.displayName!.isEmpty)) {
+        await user.updateDisplayName(googleUser.displayName);
+        await user.reload();
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: Colors.red),
-      );
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const JobScreen()),
+          (Route<dynamic> route) => false,
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Gagal daftar dengan Google: $e'),
+          backgroundColor: Colors.red));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(LucideIcons.arrowLeft, color: Color(0xFF0F172A)),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Create Account',
-                style: GoogleFonts.manrope(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF0F172A),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Start your journey and manage your habits.',
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  color: const Color(0xFF64748B),
-                ),
-              ),
-              const SizedBox(height: 48),
-
-              // Form Nama
-              Text('FULL NAME',
-                  style: GoogleFonts.manrope(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF64748B),
-                      letterSpacing: 1.2)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white,
-                  hintText: 'John Doe',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none),
-                  prefixIcon:
-                      const Icon(LucideIcons.user, color: Color(0xFF94A3B8)),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Form Email
-              Text('EMAIL ADDRESS',
-                  style: GoogleFonts.manrope(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF64748B),
-                      letterSpacing: 1.2)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white,
-                  hintText: 'you@example.com',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none),
-                  prefixIcon:
-                      const Icon(LucideIcons.mail, color: Color(0xFF94A3B8)),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Form Password
-              Text('PASSWORD',
-                  style: GoogleFonts.manrope(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF64748B),
-                      letterSpacing: 1.2)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white,
-                  hintText: '••••••••',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none),
-                  prefixIcon:
-                      const Icon(LucideIcons.lock, color: Color(0xFF94A3B8)),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                        _obscurePassword ? LucideIcons.eye : LucideIcons.eyeOff,
-                        color: const Color(0xFF94A3B8)),
-                    onPressed: () =>
-                        setState(() => _obscurePassword = !_obscurePassword),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 48),
-
-              // Register Button
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _register,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF13EC80),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    elevation: 0,
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2))
-                      : Text(
-                          'SIGN UP',
-                          style: GoogleFonts.manrope(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.2),
+        child: CustomScrollView(
+          physics: const ClampingScrollPhysics(),
+          slivers: [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Column(
+                children: [
+                  Stack(
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        height: 150,
+                        decoration: const BoxDecoration(
+                          image: DecorationImage(
+                            image: AssetImage('assets/image/login.gif'),
+                            fit: BoxFit.contain,
+                            alignment: Alignment.topCenter,
+                          ),
                         ),
-                ),
-              ),
+                      ),
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: IconButton(
+                          icon: const Icon(LucideIcons.arrowLeft,
+                              color: Color(0xFF0F172A)),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(),
+                        Positioned(
+                          top:
+                              -20, // Tarikan ke atas disesuaikan biar gak nutupin muka orang di GIF
+                          left: 24,
+                          right: 24,
+                          bottom:
+                              16, // Kasih sela 16px di bawah biar gak mepet banget
+                          child: Container(
+                            // Padding vertikal dikurangin dari 24 ke 20
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 20),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.95),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                  color: Colors.grey.withOpacity(0.20)),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x19000000),
+                                  blurRadius: 20,
+                                  offset: Offset(0, 10),
+                                )
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Center(
+                                  child: Column(
+                                    children: [
+                                      Text('Create Account',
+                                          style: GoogleFonts.inter(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.w700,
+                                              color: const Color(0xFF0F172A),
+                                              letterSpacing: -0.60)),
+                                      const SizedBox(
+                                          height: 2), // Spasi dipotong
+                                      Text('Join us to track your journey',
+                                          style: GoogleFonts.inter(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                              color: const Color(0xFF475569))),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
 
-              const SizedBox(height: 16),
+                                Text('FULL NAME',
+                                    style: GoogleFonts.inter(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFF334155),
+                                        letterSpacing: 0.6)),
+                                const SizedBox(height: 4),
+                                SizedBox(
+                                  height: 44,
+                                  child: TextField(
+                                    controller: _nameController,
+                                    decoration: InputDecoration(
+                                      filled: true,
+                                      fillColor: Colors.grey[50],
+                                      hintText: 'e.g. Your Name',
+                                      hintStyle: GoogleFonts.inter(
+                                          color: const Color(0xFF94A3B8),
+                                          fontSize: 14),
+                                      errorText: _nameError,
+                                      border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          borderSide: const BorderSide(
+                                              color: Color(0xFFE2E8F0))),
+                                      enabledBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          borderSide: const BorderSide(
+                                              color: Color(0xFFE2E8F0))),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 16),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(
+                                    height: 8), // Spasi antar form dirapatkan
 
-              // Opsi Google Sign In (Tambahan jika kamu mau pakai)
-              Center(
-                child: TextButton.icon(
-                  onPressed: () async {
-                    setState(() => _isLoading = true);
-                    final user = await _authService.signInWithGoogle();
-                    setState(() => _isLoading = false);
-                    if (user != null) {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const HabitScreen()),
-                        (Route<dynamic> route) => false,
-                      );
-                    }
-                  },
-                  icon: const Icon(LucideIcons.chrome, color: Colors.red),
-                  label: Text("Sign up with Google",
-                      style: GoogleFonts.inter(color: Colors.black)),
-                ),
+                                Text('EMAIL ADDRESS',
+                                    style: GoogleFonts.inter(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFF334155),
+                                        letterSpacing: 0.6)),
+                                const SizedBox(height: 4),
+                                SizedBox(
+                                  height: 44,
+                                  child: TextField(
+                                    controller: _emailController,
+                                    keyboardType: TextInputType.emailAddress,
+                                    decoration: InputDecoration(
+                                      filled: true,
+                                      fillColor: Colors.grey[50],
+                                      hintText: 'youremail@address.com',
+                                      hintStyle: GoogleFonts.inter(
+                                          color: const Color(0xFF94A3B8),
+                                          fontSize: 14),
+                                      errorText: _emailError,
+                                      border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          borderSide: const BorderSide(
+                                              color: Color(0xFFE2E8F0))),
+                                      enabledBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          borderSide: const BorderSide(
+                                              color: Color(0xFFE2E8F0))),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 16),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+
+                                // Form Password
+                                Text('PASSWORD',
+                                    style: GoogleFonts.inter(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFF334155),
+                                        letterSpacing: 0.6)),
+                                const SizedBox(height: 4),
+                                SizedBox(
+                                  height: 44,
+                                  child: TextField(
+                                    controller: _passwordController,
+                                    obscureText: _obscurePassword,
+                                    decoration: InputDecoration(
+                                      filled: true,
+                                      fillColor: Colors.grey[50],
+                                      hintText: '••••••••',
+                                      hintStyle: GoogleFonts.inter(
+                                          color: const Color(0xFF94A3B8),
+                                          fontSize: 14),
+                                      errorText: _passwordError,
+                                      border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          borderSide: const BorderSide(
+                                              color: Color(0xFFE2E8F0))),
+                                      enabledBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          borderSide: const BorderSide(
+                                              color: Color(0xFFE2E8F0))),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 16),
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                            _obscurePassword
+                                                ? LucideIcons.eye
+                                                : LucideIcons.eyeOff,
+                                            color: const Color(0xFF94A3B8),
+                                            size: 18),
+                                        onPressed: () => setState(() =>
+                                            _obscurePassword =
+                                                !_obscurePassword),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Tombol Sign Up
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 44, // Tinggi tombol dikurangin dikit
+                                  child: ElevatedButton(
+                                    onPressed: _isLoading ? null : _register,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF13EC80),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8)),
+                                      elevation: 0,
+                                    ),
+                                    child: _isLoading
+                                        ? const SizedBox(
+                                            height: 20,
+                                            width: 20,
+                                            child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2))
+                                        : Text('Sign Up',
+                                            style: GoogleFonts.inter(
+                                                color: const Color(0xFF102219),
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w700)),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 12),
+
+                                // Garis OR
+                                Row(
+                                  children: [
+                                    const Expanded(
+                                        child:
+                                            Divider(color: Color(0x7FCBD5E1))),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12),
+                                      child: Text('OR',
+                                          style: GoogleFonts.inter(
+                                              color: const Color(0xFF64748B),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500)),
+                                    ),
+                                    const Expanded(
+                                        child:
+                                            Divider(color: Color(0x7FCBD5E1))),
+                                  ],
+                                ),
+
+                                const SizedBox(height: 12),
+
+                                // Tombol Google
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 44, // Disamain sama tombol Sign Up
+                                  child: OutlinedButton.icon(
+                                    onPressed:
+                                        _isLoading ? null : _signUpWithGoogle,
+                                    icon: Image.asset('assets/image/google.jpg',
+                                        height: 18),
+                                    label: Text('Sign up with Google',
+                                        style: GoogleFonts.inter(
+                                            color: const Color(0xFF334155),
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600)),
+                                    style: OutlinedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8)),
+                                      side: const BorderSide(
+                                          color: Color(0xFFE2E8F0)),
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 16),
+
+                                // Teks Login
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text("Already have an account? ",
+                                        style: GoogleFonts.inter(
+                                            color: const Color(0xFF475569),
+                                            fontSize: 12)),
+                                    GestureDetector(
+                                      onTap: () => Navigator.pop(context),
+                                      child: Text('Login',
+                                          style: GoogleFonts.inter(
+                                              color: const Color(0xFF13EC80),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700)),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -115,7 +115,6 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Ubah judul berdasarkan mode (Edit atau Add)
     bool isEditing = widget.job != null;
 
     return Scaffold(
