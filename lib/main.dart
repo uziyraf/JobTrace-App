@@ -5,6 +5,7 @@ import 'package:jobtracker/features/profile/login_screen.dart';
 import 'package:jobtracker/ui/widgets/main_layout.dart';
 import 'package:jobtracker/core/services/notification_service.dart';
 import 'package:jobtracker/firebase_options.dart';
+import 'package:jobtracker/ui/widgets/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,7 +59,7 @@ class MyApp extends StatelessWidget {
       },
 
       // 3. HOME: Menggunakan AuthWrapper untuk proteksi halaman
-      home: const AuthWrapper(),
+      home: const SplashScreenFlutter(),
     );
   }
 }
