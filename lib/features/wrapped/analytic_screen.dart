@@ -103,7 +103,7 @@ class _AnalyticScreenState extends State<AnalyticScreen> {
                             ConnectionState.waiting) {
                       return const Center(
                           child: CircularProgressIndicator(
-                              color: Color(0xFF13EC80)));
+                              color: Color(0xFF0E3253)));
                     }
 
                     final allJobs = jobSnapshot.data ?? [];
@@ -292,7 +292,7 @@ class _AnalyticScreenState extends State<AnalyticScreen> {
               Row(
                 children: [
                   const Icon(LucideIcons.send,
-                      color: Color(0xFF13EC80), size: 20),
+                      color: Color(0xFF0E3253), size: 20),
                   const SizedBox(width: 8),
                   Text('Total Applications',
                       style: GoogleFonts.inter(
@@ -378,7 +378,7 @@ class _AnalyticScreenState extends State<AnalyticScreen> {
                     borderRadius: BorderRadius.circular(8)),
                 child: Text(_getMonthName(_selectedMonth.month),
                     style: GoogleFonts.inter(
-                        color: const Color(0xFF13EC80),
+                        color: const Color(0xFF0E3253),
                         fontSize: 12,
                         fontWeight: FontWeight.bold)),
               ),
@@ -401,7 +401,7 @@ class _AnalyticScreenState extends State<AnalyticScreen> {
                   height: 14,
                   decoration: BoxDecoration(
                     color: isDone
-                        ? const Color(0xFF13EC80)
+                        ? const Color(0xFF0E3253)
                         : const Color.fromARGB(255, 99, 99, 99),
                     borderRadius: BorderRadius.circular(3),
                   ),
@@ -474,7 +474,7 @@ class _AnalyticScreenState extends State<AnalyticScreen> {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF13EC80),
+                backgroundColor: const Color(0xFF0E3253),
                 foregroundColor: const Color(0xFF0F172A),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),

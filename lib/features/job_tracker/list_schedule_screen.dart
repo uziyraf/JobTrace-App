@@ -118,7 +118,7 @@ class _ListScheduleScreenState extends State<ListScheduleScreen> {
               child: TabBar(
                 indicatorSize: TabBarIndicatorSize.tab,
                 indicator: BoxDecoration(
-                    color: const Color(0xFF13EC80),
+                    color: const Color(0xFF0E3253),
                     borderRadius: BorderRadius.circular(10)),
                 labelColor: const Color(0xFF0F172A),
                 unselectedLabelColor: const Color(0xFF64748B),
@@ -135,7 +135,7 @@ class _ListScheduleScreenState extends State<ListScheduleScreen> {
         ),
         body: isLoading
             ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFF13EC80)))
+                child: CircularProgressIndicator(color: Color(0xFF0E3253)))
             : TabBarView(
                 children: [
                   _buildScheduleList(upcomingList),

@@ -22,6 +22,7 @@ dependencies:
   cloud_firestore: ^6.1.3
   firebase_auth: ^6.4.0
   google_sign_in: ^6.2.1
+  defer_pointer: ^0.0.2
 
 dev_dependencies:
   flutter_test:
@@ -33,7 +34,7 @@ dev_dependencies:
 flutter_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/image/logo_jobtrace.png" # Pastikan nama file logonya bener
+  image_path: "assets/image/logo_jobtrace.png" 
   min_sdk_android: 21
 
 flutter_native_splash:
@@ -46,5 +47,5 @@ flutter_native_splash:
 
 flutter:
   uses-material-design: true
-  assets:             # <--- Kasih spasi biar sejajar sama 'uses-material-design'
+  assets:             
     - assets/image/

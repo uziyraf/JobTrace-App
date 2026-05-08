@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:jobtracker/data/models/daos/application_dao.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../data/models/application_model.dart';
 
@@ -25,9 +27,18 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
   String selectedPlatform = 'LinkedIn';
   DateTime selectedDate = DateTime.now();
 
+  // --- VARIABEL LOGIKA MATCHING ---
+  List<String> _userSkillsFromProfile = [];
+  double _currentMatchScore = 0.0;
+
   @override
   void initState() {
     super.initState();
+
+    _fetchUserSkills();
+
+    _evaluationController.addListener(_updateMatchScore);
+
     if (widget.job != null) {
       _companyController.text = widget.job!.company;
       _positionController.text = widget.job!.role;
@@ -35,11 +46,58 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
       _notesController.text = widget.job!.notes ?? '';
       selectedStatus = widget.job!.status;
       selectedPlatform = widget.job!.platform;
+      _currentMatchScore = widget.job!.matchPercentage;
+
       try {
         selectedDate = DateFormat('MM/dd/yyyy').parse(widget.job!.dateApplied);
       } catch (e) {
-        selectedDate = DateTime.now(); // Jaga-jaga kalau format tanggal salah
+        selectedDate = DateTime.now();
       }
+    }
+  }
+
+  Future<void> _fetchUserSkills() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        // Cek kalau datanya beneran ada di Firebase
+        if (doc.exists && doc.data() != null && doc.data()!['skills'] != null) {
+          setState(() {
+            _userSkillsFromProfile = List<String>.from(doc.data()!['skills']);
+          });
+        }
+        _updateMatchScore(); // Panggil hitung ulang
+      }
+    } catch (e) {
+      debugPrint("Error fetching profile skills: $e");
+    }
+  }
+
+  void _updateMatchScore() {
+    String desc = _evaluationController.text.toLowerCase();
+
+    if (_userSkillsFromProfile.isEmpty || desc.isEmpty) {
+      if (mounted) setState(() => _currentMatchScore = 0.0);
+      return;
+    }
+
+    int matches = 0;
+    for (var skill in _userSkillsFromProfile) {
+      // Logika String Matching: Cek apakah kata kunci skill ada di dalam deskripsi
+      if (desc.contains(skill.toLowerCase())) {
+        matches++;
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _currentMatchScore = (matches / _userSkillsFromProfile.length) * 100;
+      });
     }
   }
 
@@ -60,15 +118,14 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
         _positionController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Company Name and Position Title are required!'),
+            content: Text('Company and Position are required!'),
             backgroundColor: Colors.redAccent),
       );
       return;
     }
 
-    // Siapkan data yang mau disimpan (Ambil ID lama kalau lagi mode edit)
     final newApp = ApplicationModel(
-      id: widget.job?.id, // Kunci utama! Kalau null berarti data baru
+      id: widget.job?.id,
       company: _companyController.text.trim(),
       role: _positionController.text.trim(),
       status: selectedStatus,
@@ -76,36 +133,32 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
       dateApplied: DateFormat('MM/dd/yyyy').format(selectedDate),
       evaluation: _evaluationController.text.trim(),
       notes: _notesController.text.trim(),
+      // SIMPAN SKOR HASIL MATCHING KE FIREBASE
+      matchPercentage: _currentMatchScore,
     );
 
-    // --- BAGIAN INI YANG BERUBAH: PANGGIL DAO ---
     final applicationDao = ApplicationDao();
 
-    // Cek apakah mode Edit atau Add
     if (widget.job == null) {
-      await applicationDao.insertApplication(newApp); // Tambah Baru
+      await applicationDao.insertApplication(newApp);
     } else {
-      await applicationDao.updateApplication(newApp); // Update Lama
+      await applicationDao.updateApplication(newApp);
     }
-    // --------------------------------------------
 
-    // Opsional: Tutup halaman dan munculkan notif
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(widget.job == null
-              ? 'Application saved successfully! 🎉'
-              : 'Application updated successfully! ✨'),
+          content: Text(widget.job == null ? 'Saved! 🎉' : 'Updated! ✨'),
           backgroundColor: const Color(0xFF0EB562),
         ),
       );
-      // Kembalikan model yang baru di-save ke halaman sebelumnya
       Navigator.pop(context, newApp);
     }
   }
 
   @override
   void dispose() {
+    _evaluationController.removeListener(_updateMatchScore); // Lepas listener
     _companyController.dispose();
     _positionController.dispose();
     _evaluationController.dispose();
@@ -125,22 +178,11 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
           icon: const Icon(LucideIcons.x, color: Color(0xFF0F172A)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          isEditing ? 'Edit Application' : 'Add Application', // Judul Dinamis
-          style: GoogleFonts.inter(
-              fontWeight: FontWeight.w700,
-              fontSize: 18,
-              color: const Color(0xFF0F172A)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: _saveApplication,
-            child: Text(isEditing ? 'Update' : 'Save', // Tombol Dinamis
-                style: GoogleFonts.inter(
-                    color: const Color(0xFF0EB562),
-                    fontWeight: FontWeight.w600)),
-          )
-        ],
+        title: Text(isEditing ? 'Edit Application' : 'Add Application',
+            style: GoogleFonts.inter(
+                fontWeight: FontWeight.w700,
+                fontSize: 18,
+                color: const Color(0xFF0F172A))),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -179,13 +221,13 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
             const SizedBox(height: 20),
             _buildDatePicker(),
             const SizedBox(height: 24),
+
+            // --- BOX EVALUASI DENGAN PERSENTASE ---
             _buildSelfEvaluationBox(),
+
             const SizedBox(height: 24),
-            _buildInputField(
-                "Additional Notes",
-                "URL to job posting, recruiter info, etc.",
-                null,
-                _notesController,
+            _buildInputField("Additional Notes", "URL, recruiter info, etc.",
+                null, _notesController,
                 isMultiline: true),
             const SizedBox(height: 100),
           ],
@@ -193,12 +235,79 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _saveApplication,
-        backgroundColor: const Color(0xFF13EC80),
+        backgroundColor: const Color(0xFF0E3253),
         child: const Icon(LucideIcons.check, color: Color(0xFF0F172A)),
       ),
     );
   }
 
+  Widget _buildSelfEvaluationBox() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFF1F5F9))),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(LucideIcons.lightbulb,
+                      color: Color(0xFF0EB562), size: 18),
+                  const SizedBox(width: 8),
+                  Text("SELF-EVALUATION",
+                      style: GoogleFonts.inter(
+                          color: const Color(0xFF0EB562),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14)),
+                ],
+              ),
+              // INDIKATOR SKOR MATCHING
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0E3253).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  "${_currentMatchScore.toStringAsFixed(0)}% Match",
+                  style: GoogleFonts.inter(
+                      color: const Color(0xFF0EB562),
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+              "Reflect on your application. Type job requirements here to see match score.",
+              style: GoogleFonts.inter(
+                  color: const Color(0xFF64748B), fontSize: 12)),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _evaluationController,
+            maxLines: 4,
+            decoration: InputDecoration(
+              hintText: "Paste skill requirements here...",
+              filled: true,
+              fillColor: const Color(0xFFEEF2F0),
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Reusable Input Field
   Widget _buildInputField(String label, String placeholder, IconData? icon,
       TextEditingController controller,
       {bool isMultiline = false}) {
@@ -231,6 +340,7 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
     );
   }
 
+  // Reusable Dropdown
   Widget _buildDropdown(String label, String value, List<String> items,
       Function(String?) onChanged) {
     return Column(
@@ -265,6 +375,7 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
     );
   }
 
+  // Reusable Date Picker
   Widget _buildDatePicker() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -290,57 +401,12 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
                     style: GoogleFonts.inter(
                         fontSize: 16, color: const Color(0xFF0F172A))),
                 const Icon(LucideIcons.calendar,
-                    color: Color(0xFF13EC80), size: 20),
+                    color: Color(0xFF0E3253), size: 20),
               ],
             ),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildSelfEvaluationBox() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFF1F5F9))),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(LucideIcons.lightbulb,
-                  color: Color(0xFF0EB562), size: 18),
-              const SizedBox(width: 8),
-              Text("SELF-EVALUATION",
-                  style: GoogleFonts.inter(
-                      color: const Color(0xFF0EB562),
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                      letterSpacing: 0.7)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text("Reflect on your application. How confident do you feel?",
-              style: GoogleFonts.inter(
-                  color: const Color(0xFF64748B), fontSize: 12)),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _evaluationController,
-            maxLines: 3,
-            decoration: InputDecoration(
-              hintText: "I feel that my cover letter was strong...",
-              filled: true,
-              fillColor: const Color(0xFFEEF2F0),
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

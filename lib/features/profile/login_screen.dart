@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:jobtracker/features/job_tracker/job_screen.dart';
 import 'package:jobtracker/features/profile/register_screen.dart';
+import 'package:jobtracker/ui/widgets/main_layout.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -94,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const JobScreen()),
+          MaterialPageRoute(builder: (context) => const MainLayout()),
         );
       }
     } catch (e) {
@@ -230,7 +231,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               style: GoogleFonts.inter(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF13EC80))),
+                                  color: const Color(0xFF0E3253))),
                         ],
                       ),
                       const SizedBox(height: 6),
@@ -279,7 +280,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : _login,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF13EC80),
+                            backgroundColor: const Color(0xFF0E3253),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8)),
                             elevation: 0,
@@ -360,7 +361,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         const RegisterScreen())),
                             child: Text('Sign up',
                                 style: GoogleFonts.inter(
-                                    color: const Color(0xFF13EC80),
+                                    color: const Color(0xFF0E3253),
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700)),
                           ),

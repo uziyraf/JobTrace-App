@@ -39,7 +39,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           IconButton(
               onPressed: () {},
-              icon: const Icon(LucideIcons.settings, color: Color(0xFF13EC80))),
+              icon: const Icon(LucideIcons.settings, color: Color(0xFF0E3253))),
         ],
       ),
       body: SingleChildScrollView(
@@ -118,7 +118,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-              color: const Color(0xFF13EC80),
+              color: const Color(0xFF0E3253),
               borderRadius: BorderRadius.circular(99)),
           child: Text('JOB SEEKER',
               style: GoogleFonts.inter(
@@ -193,7 +193,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             children: [
               _buildStylingRow(
-                  "Accent Color", "Sky Blue", const Color(0xFF13EC80)),
+                  "Accent Color", "Sky Blue", const Color(0xFF0E3253)),
               const Divider(height: 32),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -206,7 +206,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Slider(
                       value: cardTransparency,
                       onChanged: (v) => setState(() => cardTransparency = v),
-                      activeColor: const Color(0xFF13EC80),
+                      activeColor: const Color(0xFF0E3253),
                     ),
                   )
                 ],
@@ -234,7 +234,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   LucideIcons.moon, "Dark Mode", const Color(0x336366F1),
                   trailing: Switch(
                       value: isDarkMode,
-                      activeColor: const Color(0xFF13EC80),
+                      activeColor: const Color(0xFF0E3253),
                       onChanged: (v) => setState(() => isDarkMode = v))),
 
               // MENU MY SKILLS (BARU)
@@ -281,7 +281,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-          color: const Color(0xFF13EC80),
+          color: const Color(0xFF0E3253),
           borderRadius: BorderRadius.circular(16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -373,7 +373,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF13EC80))),
+                  color: const Color(0xFF0E3253))),
       ],
     );
   }

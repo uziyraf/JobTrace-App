@@ -1,5 +1,5 @@
 class ApplicationModel {
-  final int? id; // ID otomatis dari SQLite
+  final String? id; // Di Firebase, ID biasanya String (Document ID)
   final String company;
   final String role;
   final String status;
@@ -7,6 +7,9 @@ class ApplicationModel {
   final String dateApplied;
   final String? evaluation;
   final String? notes;
+
+  // Field Tambahan buat Fitur Skill Match
+  final List<String> requiredSkills;
   final double matchPercentage;
 
   ApplicationModel({
@@ -18,13 +21,13 @@ class ApplicationModel {
     required this.dateApplied,
     this.evaluation,
     this.notes,
+    this.requiredSkills = const [], // Default list kosong
     this.matchPercentage = 0.0,
   });
 
-  // Mengubah data Model menjadi Map (Format yang diterima SQLite)
+  // Konversi dari Object ke Map (buat dikirim ke Firestore)
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'company': company,
       'role': role,
       'status': status,
@@ -32,21 +35,24 @@ class ApplicationModel {
       'dateApplied': dateApplied,
       'evaluation': evaluation,
       'notes': notes,
+      'requiredSkills': requiredSkills,
       'matchPercentage': matchPercentage,
     };
   }
 
-  // Mengubah data dari SQLite (Map) kembali menjadi Model
-  factory ApplicationModel.fromMap(Map<String, dynamic> map) {
+  // Konversi dari Map/DocumentSnapshot ke Object (buat ditarik dari Firestore)
+  factory ApplicationModel.fromMap(
+      Map<String, dynamic> map, String documentId) {
     return ApplicationModel(
-      id: map['id'],
-      company: map['company'],
-      role: map['role'],
-      status: map['status'],
-      platform: map['platform'],
-      dateApplied: map['dateApplied'],
+      id: documentId,
+      company: map['company'] ?? '',
+      role: map['role'] ?? '',
+      status: map['status'] ?? 'Applied',
+      platform: map['platform'] ?? 'LinkedIn',
+      dateApplied: map['dateApplied'] ?? '',
       evaluation: map['evaluation'],
       notes: map['notes'],
+      requiredSkills: List<String>.from(map['requiredSkills'] ?? []),
       matchPercentage: (map['matchPercentage'] ?? 0.0).toDouble(),
     );
   }

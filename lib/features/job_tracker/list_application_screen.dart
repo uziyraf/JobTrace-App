@@ -50,7 +50,7 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
               child: isLoading
                   ? const Center(
                       child:
-                          CircularProgressIndicator(color: Color(0xFF13EC80)))
+                          CircularProgressIndicator(color: Color(0xFF0E3253)))
                   : applications.isEmpty
                       ? _buildEmptyState()
                       : ListView.builder(
@@ -71,29 +71,12 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          // 5. TUNGGU HASIL KEMBALIAN DARI ADD SCREEN (Jika true, refresh data)
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => const AddApplicationScreen()),
-          );
-
-          if (result == true) {
-            _refreshApplications();
-          }
-        },
-        backgroundColor: const Color(0xFF13EC80),
-        child: const Icon(LucideIcons.plus, color: Color(0xFF0F172A)),
-      ),
     );
   }
 
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(24),
-      color: Colors.white,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -114,7 +97,6 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
     final filters = ['All', 'Applied', 'Interview', 'Offer', 'Rejected'];
     return Container(
       height: 60,
-      color: Colors.white,
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -131,11 +113,11 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
         margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
         padding: const EdgeInsets.symmetric(horizontal: 20),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF13EC80) : Colors.white,
+          color: isSelected ? const Color(0xFF0E3253) : Colors.white,
           borderRadius: BorderRadius.circular(99),
           border: Border.all(
               color: isSelected
-                  ? const Color(0xFF13EC80)
+                  ? const Color(0xFF0E3253)
                   : const Color(0xFFE2E8F0)),
         ),
         child: Center(
@@ -145,7 +127,7 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: isSelected
-                    ? const Color(0xFF0F172A)
+                    ? const Color.fromARGB(255, 255, 255, 255)
                     : const Color(0xFF475569)),
           ),
         ),

@@ -48,9 +48,9 @@ class MyApp extends StatelessWidget {
               begin: Alignment.bottomLeft,
               end: Alignment.topRight,
               colors: [
-                Color.fromRGBO(14, 50, 83, 1), // Krem bawah
-                Color.fromRGBO(25, 181, 165, 1), // Mint tengah
-                Color.fromRGBO(255, 255, 255, 1), // Hijau mint kanan atas
+                Color(0xFF0E3253),
+                Color(0xFF19B5A5),
+                Color(0xFFFFFFFF),
               ],
             ),
           ),
@@ -78,7 +78,7 @@ class AuthWrapper extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(
-              child: CircularProgressIndicator(color: Color(0xFF13EC80)),
+              child: CircularProgressIndicator(color: Color(0xFF0E3253)),
             ),
           );
         }

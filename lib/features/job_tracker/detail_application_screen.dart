@@ -87,7 +87,7 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
                     width: 56,
                     height: 56,
                     decoration: const BoxDecoration(
-                      color: Color(0xFF13EC80),
+                      color: Color(0xFF0E3253),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
@@ -254,7 +254,6 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
               height: MediaQuery.of(context).size.height * 0.75,
               padding: const EdgeInsets.all(24),
               decoration: const BoxDecoration(
-                color: Colors.white,
                 borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(24),
                     topRight: Radius.circular(24)),
@@ -504,7 +503,6 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F5F7),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,

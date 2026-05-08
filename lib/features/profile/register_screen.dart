@@ -349,7 +349,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   child: ElevatedButton(
                                     onPressed: _isLoading ? null : _register,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF13EC80),
+                                      backgroundColor: const Color(0xFF0E3253),
                                       shape: RoundedRectangleBorder(
                                           borderRadius:
                                               BorderRadius.circular(8)),
@@ -434,7 +434,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       onTap: () => Navigator.pop(context),
                                       child: Text('Login',
                                           style: GoogleFonts.inter(
-                                              color: const Color(0xFF13EC80),
+                                              color: const Color(0xFF0E3253),
                                               fontSize: 12,
                                               fontWeight: FontWeight.w700)),
                                     ),

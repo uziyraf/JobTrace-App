@@ -370,7 +370,7 @@ class _JobScreenState extends State<JobScreen> {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(
-                  child: CircularProgressIndicator(color: Color(0xFF13EC80)));
+                  child: CircularProgressIndicator(color: Color(0xFF0E3253)));
             }
 
             if (snapshot.hasError) {
@@ -440,12 +440,12 @@ class _JobScreenState extends State<JobScreen> {
               height: 24,
               decoration: BoxDecoration(
                 color: isDone
-                    ? const Color(0xFF13EC80)
+                    ? const Color(0xFF0E3253)
                     : Colors.white.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
                   color: isDone
-                      ? const Color(0xFF13EC80)
+                      ? const Color(0xFF0E3253)
                       : const Color(0xFFD1D5DB),
                   width: 2,
                 ),
