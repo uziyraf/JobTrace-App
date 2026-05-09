@@ -57,6 +57,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildHighlightCard(),
             const SizedBox(height: 24),
             _buildSignOutButton(),
+            const SizedBox(height: 110),
           ],
         ),
       ),

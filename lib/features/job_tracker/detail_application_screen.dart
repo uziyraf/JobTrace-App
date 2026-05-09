@@ -87,7 +87,7 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
                     width: 56,
                     height: 56,
                     decoration: const BoxDecoration(
-                      color: Color(0xFF0E3253),
+                      color: Color(0xFF13EC80),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
@@ -146,7 +146,7 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
                         const SizedBox(width: 8),
                         Text('Schedule Interview',
                             style: GoogleFonts.inter(
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white)),
                       ],
@@ -241,7 +241,7 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.white,
       builder: (context) {
         return StatefulBuilder(builder: (context, setModalState) {
           bool isCurrentStatusCustom =

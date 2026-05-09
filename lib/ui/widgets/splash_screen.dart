@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:jobtracker/features/profile/auth_gate.dart';
 import 'package:jobtracker/features/profile/login_screen.dart';
 
 class SplashScreenFlutter extends StatefulWidget {
@@ -17,7 +18,7 @@ class _SplashScreenFlutterState extends State<SplashScreenFlutter> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          MaterialPageRoute(builder: (context) => const AuthGate()),
         );
       }
     });
