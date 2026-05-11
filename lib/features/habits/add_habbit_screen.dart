@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:jobtracker/core/services/notification_service.dart';
 import 'package:jobtracker/data/models/daos/habbit_dao.dart';
 import 'package:jobtracker/data/models/habbit_model.dart';
 
 class AddHabitScreen extends StatefulWidget {
-  // 1. TAMBAHIN PARAMETER INI BUAT NERIMA DATA EDIT
   final HabitModel? habitToEdit;
 
   const AddHabitScreen({super.key, this.habitToEdit});
@@ -20,7 +20,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   TimeOfDay? _selectedTime;
   bool _isReminderOn = false;
 
-  // Variabel untuk Fitur Frekuensi
   String _selectedFrequency = 'Daily';
   final List<String> _frequencyOptions = [
     'Daily',
@@ -32,7 +31,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     'Custom...'
   ];
 
-  // Cek apakah ini mode edit atau tambah baru
   bool get isEditMode => widget.habitToEdit != null;
 
   @override
@@ -57,7 +55,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     }
   }
 
-  // 1. Fungsi buat milih jam
   Future<void> _selectTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -70,7 +67,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     }
   }
 
-  // 2. Fungsi Pop-up Custom Frekuensi (Muncul kalau pilih "Custom...")
   void _showCustomFrequencyDialog() {
     int interval = 2;
     String unit = 'Hari';
@@ -119,7 +115,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                     setState(() {
                       _selectedFrequency = 'Setiap $interval $unit';
                     });
-                    Navigator.pop(context); // Tutup pop-up
+                    Navigator.pop(context);
                   },
                   child: const Text('Simpan',
                       style: TextStyle(color: Colors.white)),
@@ -130,7 +126,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         });
   }
 
-  // 3. Fungsi Bottom Sheet Frekuensi Utama (VERSI ANTI-OVERFLOW)
   void _showFrequencyPicker() {
     showModalBottomSheet(
       context: context,
@@ -186,7 +181,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     );
   }
 
-  // 4. Fungsi Simpan / Update Data ke Database
+  // --- UPDATE ADA DI FUNGSI INI ---
   Future<void> _saveHabit() async {
     if (_nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -205,7 +200,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
 
     try {
       if (isEditMode) {
-        // UPDATE HABIT YANG SUDAH ADA
         final updatedHabit = widget.habitToEdit!;
         updatedHabit.habitName = _nameController.text.trim();
         updatedHabit.reminderTime = timeString;
@@ -214,7 +208,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
 
         await _habitDao.updateHabit(updatedHabit);
       } else {
-        // BIKIN HABIT BARU
         final newHabit = HabitModel(
           userId: '',
           habitName: _nameController.text.trim(),
@@ -225,6 +218,19 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
 
         await _habitDao.addHabit(newHabit);
       }
+
+      // 👇 EKSEKUSI TANAM ALARM NOTIFIKASI 👇
+      if (_isReminderOn && _selectedTime != null) {
+        int notifId = _nameController.text.trim().hashCode;
+
+        await NotificationService().scheduleDailyHabitReminder(
+          id: notifId,
+          habitName: _nameController.text.trim(),
+          hour: _selectedTime!.hour,
+          minute: _selectedTime!.minute,
+        );
+      }
+      // 👆 ================================ 👆
 
       if (mounted) {
         Navigator.pop(context);
@@ -266,7 +272,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Card
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
@@ -299,8 +304,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
               ),
             ),
             const SizedBox(height: 32),
-
-            // FORM: HABIT NAME
             Text(
               'HABIT NAME',
               style: GoogleFonts.manrope(
@@ -336,8 +339,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
               ),
             ),
             const SizedBox(height: 24),
-
-            // FORM: FREQUENCY
             Text(
               'FREQUENCY',
               style: GoogleFonts.manrope(
@@ -376,8 +377,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
               ),
             ),
             const SizedBox(height: 24),
-
-            // FORM: REMINDER TIME
             Text(
               'REMINDER TIME',
               style: GoogleFonts.manrope(
@@ -419,8 +418,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
               ),
             ),
             const SizedBox(height: 24),
-
-            // FORM: NOTIFICATIONS (SWITCH)
             Text(
               'NOTIFICATIONS',
               style: GoogleFonts.manrope(
@@ -459,8 +456,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
               ),
             ),
             const SizedBox(height: 32),
-
-            // INFO CARD (NOTE)
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -514,8 +509,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
               ),
             ),
             const SizedBox(height: 40),
-
-            // SAVE BUTTON
             InkWell(
               onTap: _saveHabit,
               borderRadius: BorderRadius.circular(8),
@@ -529,7 +522,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  // Ubah Teks Tombol tergantung mode
                   isEditMode ? 'UPDATE HABIT' : 'SAVE HABIT',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.manrope(

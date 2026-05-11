@@ -12,25 +12,24 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
-    // Setup timezone dasar
     tz.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Asia/Jakarta'));
 
     const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@drawable/ic_notif');
 
-    const InitializationSettings initSettings =
-        InitializationSettings(android: androidSettings);
-
-    await _notificationsPlugin.initialize(
-      settings: initSettings,
+    const InitializationSettings initSettings = InitializationSettings(
+      android: androidSettings,
     );
+
+    await _notificationsPlugin.initialize(settings: initSettings);
   }
 
   Future<void> requestPermission() async {
-    final androidImplementation =
-        _notificationsPlugin.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    final androidImplementation = _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await androidImplementation?.requestNotificationsPermission();
     await androidImplementation?.requestExactAlarmsPermission();
   }
@@ -46,33 +45,33 @@ class NotificationService {
       await requestPermission();
       print("🔔 [NOTIF LOG] Cek Izin selesai.");
 
-      final scheduledTime =
-          tz.TZDateTime.now(tz.UTC).add(const Duration(seconds: 10));
+      final scheduledTime = tz.TZDateTime.now(
+        tz.UTC,
+      ).add(const Duration(seconds: 10));
       print("🔔 [NOTIF LOG] Jadwal diset pada: $scheduledTime");
 
       const AndroidNotificationDetails androidDetails =
           AndroidNotificationDetails(
-        'jalur_skripsi_baru_v1',
-        'Interview Reminders',
-        channelDescription: 'Reminds you to update interview status',
-        importance: Importance.max,
-        priority: Priority.high,
-        color: Color(0xFF0EB562),
-      );
+            'jalur_skripsi_baru_v1',
+            'Interview Reminders',
+            channelDescription: 'Reminds you to update interview status',
+            importance: Importance.max,
+            priority: Priority.high,
+            color: Color(0xFF0EB562),
+          );
 
-      const NotificationDetails details =
-          NotificationDetails(android: androidDetails);
+      const NotificationDetails details = NotificationDetails(
+        android: androidDetails,
+      );
 
       print("🔔 [NOTIF LOG] Mengirim perintah ke sistem Android...");
 
-      // 👇👇👇 KODE TEST INSTAN 👇👇👇
       await _notificationsPlugin.show(
         id: 99,
         title: 'TEST INSTAN 🚀',
         body: 'Kalau ini muncul, berarti Infinix memblokir alarm 10 detiknya!',
         notificationDetails: details,
       );
-      // 👆👆👆 ================= 👆👆👆
 
       await _notificationsPlugin.zonedSchedule(
         id: id,
@@ -108,7 +107,6 @@ class NotificationService {
         minute,
       );
 
-      // Kalau jamnya udah lewat hari ini, lempar ke besok
       if (scheduledDate.isBefore(now)) {
         scheduledDate = scheduledDate.add(const Duration(days: 1));
       }

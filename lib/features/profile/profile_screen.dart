@@ -66,11 +66,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // 1. Profile Header (FOTO DAN NAMA DARI GOOGLE)
   Widget _buildProfileHeader() {
-    // Ambil nama dari Google, kalau kosong kasih default 'Job Seeker'
     String displayName = currentUser?.displayName ?? 'Job Seeker';
-    // Ambil email dari Google
     String email = currentUser?.email ?? 'No email linked';
-    // Ambil foto dari Google, kalau kosong pakai foto default
     String photoUrl = currentUser?.photoURL ??
         "https://ui-avatars.com/api/?name=${displayName.replaceAll(' ', '+')}&background=random";
 
@@ -110,7 +107,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 fontWeight: FontWeight.w700,
                 color: const Color(0xFF0F172A))),
         const SizedBox(height: 4),
-        Text(email, // TAMPILIN EMAIL DI BAWAH NAMA
+        Text(email,
             style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
@@ -132,49 +129,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // 2. Workspace Theme (Background Selector)
   Widget _buildThemeSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle("WORKSPACE THEME", showSeeAll: true),
+        _buildSectionTitle("WORKSPACE THEME (COMING SOON)", showSeeAll: true),
         const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: _cardDecoration(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Backgrounds',
-                  style: GoogleFonts.inter(
-                      fontSize: 11, color: const Color(0xFF64748B))),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  _themeThumb("https://placehold.co/60x60", isSelected: true),
-                  _themeThumb("https://placehold.co/60x60"),
-                  _themeThumb("https://placehold.co/60x60"),
-                  _addThumb(),
-                ],
+        GestureDetector(
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                    'Fitur Workspace Theme masih dalam tahap pengembangan 🛠️'),
+                backgroundColor: Color(0xFF0E3253),
+                duration: Duration(seconds: 2),
               ),
-              const SizedBox(height: 16),
-              Text('Solid Colors',
-                  style: GoogleFonts.inter(
-                      fontSize: 12, color: const Color(0xFF64748B))),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _colorCircle(Colors.blue),
-                  _colorCircle(Colors.yellow),
-                  _colorCircle(Colors.purple),
-                  _colorCircle(Colors.orange),
-                  _colorCircle(const Color(0xFF1E293B)),
-                ],
-              ),
-            ],
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: _cardDecoration(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Backgrounds',
+                    style: GoogleFonts.inter(
+                        fontSize: 11, color: const Color(0xFF64748B))),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    _themeThumb("https://placehold.co/60x60", isSelected: true),
+                    _themeThumb("https://placehold.co/60x60"),
+                    _themeThumb("https://placehold.co/60x60"),
+                    _addThumb(),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text('Solid Colors',
+                    style: GoogleFonts.inter(
+                        fontSize: 12, color: const Color(0xFF64748B))),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _colorCircle(Colors.blue),
+                    _colorCircle(Colors.yellow),
+                    _colorCircle(Colors.purple),
+                    _colorCircle(Colors.orange),
+                    _colorCircle(const Color(0xFF1E293B)),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -186,40 +194,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle("COMPONENT STYLING"),
+        _buildSectionTitle("COMPONENT STYLING (COMING SOON)"),
         const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: _cardDecoration(),
-          child: Column(
-            children: [
-              _buildStylingRow(
-                  "Accent Color", "Sky Blue", const Color(0xFF0E3253)),
-              const Divider(height: 32),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("Card Transparency",
-                      style: GoogleFonts.inter(
-                          fontSize: 14, color: const Color(0xFF334155))),
-                  SizedBox(
-                    width: 120,
-                    child: Slider(
-                      value: cardTransparency,
-                      onChanged: (v) => setState(() => cardTransparency = v),
-                      activeColor: const Color(0xFF0E3253),
-                    ),
-                  )
-                ],
-              )
-            ],
+        GestureDetector(
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Fitur Styling sedang dikembangkan! 🚀'),
+                backgroundColor: Color(0xFF0E3253),
+              ),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: _cardDecoration(),
+            child: Column(
+              children: [
+                _buildStylingRow(
+                    "Accent Color", "Sky Blue", const Color(0xFF0E3253)),
+                const Divider(height: 32),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Card Transparency",
+                        style: GoogleFonts.inter(
+                            fontSize: 14, color: const Color(0xFF334155))),
+                    SizedBox(
+                      width: 120,
+                      child: Slider(
+                        value: cardTransparency,
+                        onChanged: (v) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  'Transparansi belum bisa diubah di versi ini 🚧'),
+                              backgroundColor: Color(0xFF0E3253),
+                              duration: Duration(milliseconds: 1500),
+                            ),
+                          );
+                        },
+                        activeColor: const Color(0xFF0E3253).withOpacity(0.5),
+                      ),
+                    )
+                  ],
+                )
+              ],
+            ),
           ),
         ),
       ],
     );
   }
 
-  // 4. App Preferences (Dark Mode, Skills, Habit, Account)
   Widget _buildAppPreferences() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,7 +262,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   trailing: Switch(
                       value: isDarkMode,
                       activeColor: const Color(0xFF0E3253),
-                      onChanged: (v) => setState(() => isDarkMode = v))),
+                      onChanged: (v) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content:
+                                Text('Sabar ya, Dark Mode masih didevelop! 🦇'),
+                            backgroundColor: Color(0xFF0E3253),
+                          ),
+                        );
+                      })),
 
               // MENU MY SKILLS (BARU)
               _buildPrefTile(
