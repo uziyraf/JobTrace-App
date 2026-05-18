@@ -8,6 +8,9 @@ import '../../data/models/application_model.dart';
 class ListApplicationScreen extends StatefulWidget {
   const ListApplicationScreen({super.key});
 
+  // --- KODE SAKTI: Variabel statis buat dipanggil dari halaman Add ---
+  static Function? refreshData;
+
   @override
   State<ListApplicationScreen> createState() => _ListApplicationScreenState();
 }
@@ -18,10 +21,25 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
   List<ApplicationModel> applications = [];
   bool isLoading = true;
 
+  bool isSearching = false;
+  TextEditingController searchController = TextEditingController();
+  String searchQuery = '';
+
   @override
   void initState() {
     super.initState();
     _refreshApplications();
+
+    // Mendaftarkan fungsi refresh ke variabel statis
+    ListApplicationScreen.refreshData = _refreshApplications;
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    // Bersihkan fungsi saat halaman dihancurkan biar gak memory leak
+    ListApplicationScreen.refreshData = null;
+    super.dispose();
   }
 
   Future<void> _refreshApplications() async {
@@ -58,6 +76,17 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
                                 item.status != selectedFilter) {
                               return const SizedBox.shrink();
                             }
+
+                            if (searchQuery.isNotEmpty &&
+                                !item.company
+                                    .toLowerCase()
+                                    .contains(searchQuery) &&
+                                !item.role
+                                    .toLowerCase()
+                                    .contains(searchQuery)) {
+                              return const SizedBox.shrink();
+                            }
+
                             return _buildJobCard(item);
                           },
                         ),
@@ -74,14 +103,52 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            'My Applications',
-            style: GoogleFonts.inter(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF0F172A)),
+          if (isSearching)
+            Expanded(
+              child: TextField(
+                controller: searchController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'Search company or role...',
+                  border: InputBorder.none,
+                  hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8)),
+                ),
+                style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF0F172A)),
+                onChanged: (value) {
+                  setState(() {
+                    searchQuery = value.toLowerCase();
+                  });
+                },
+              ),
+            )
+          else
+            Text(
+              'My Applications',
+              style: GoogleFonts.inter(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF0F172A)),
+            ),
+          IconButton(
+            icon: Icon(
+              isSearching ? LucideIcons.x : LucideIcons.search,
+              color: const Color(0xFF0F172A),
+            ),
+            onPressed: () {
+              setState(() {
+                if (isSearching) {
+                  isSearching = false;
+                  searchController.clear();
+                  searchQuery = '';
+                } else {
+                  isSearching = true;
+                }
+              });
+            },
           ),
-          const Icon(LucideIcons.search, color: Color(0xFF0F172A)),
         ],
       ),
     );
@@ -156,7 +223,7 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
       if (platform.toUpperCase() == 'ZOOM') return const Color(0xFF137FEC);
       if (platform.toUpperCase() == 'MEET') return const Color(0xFF10B981);
       if (platform.toUpperCase() == 'TEAMS') return const Color(0xFF9333EA);
-      return const Color(0xFF64748B); // Default abu-abu
+      return const Color(0xFF64748B);
     }
 
     Color getStatusColor(String status) {

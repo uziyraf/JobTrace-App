@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jobtracker/data/models/daos/application_dao.dart';
+import 'package:jobtracker/ui/widgets/main_layout.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../data/models/application_model.dart';
 import '../../core/services/notification_service.dart';
+import 'list_application_screen.dart';
 
 class AddApplicationScreen extends StatefulWidget {
   final ApplicationModel? job;
@@ -28,9 +30,8 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
   String selectedPlatform = 'LinkedIn';
   DateTime selectedDate = DateTime.now();
 
-  // --- VARIABEL FREKUENSI TEROR ---
-  String selectedFrequency = 'Daily'; // Opsi: Daily, Weekly, Custom
-  int customFrequencyDays = 2; // Default kalau milih custom
+  String selectedFrequency = 'Daily';
+  int customFrequencyDays = 2;
 
   List<String> _userSkillsFromProfile = [];
   double _currentMatchScore = 0.0;
@@ -105,7 +106,6 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
       return;
     }
 
-    // Pakai ID database atau random ID kalau baru bikin (buat ID alarm)
     int notificationId =
         widget.job?.id ?? (DateTime.now().millisecondsSinceEpoch % 100000);
 
@@ -127,11 +127,14 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
     } else {
       await applicationDao.updateApplication(newApp);
     }
+
+    if (ListApplicationScreen.refreshData != null) {
+      ListApplicationScreen.refreshData!();
+    }
+
     if (selectedStatus == 'Offer' || selectedStatus == 'Rejected') {
-      // Hentikan teror kalau udah diterima / ditolak
       await NotificationService().cancelFollowUp(notificationId);
     } else {
-      // Pasang teror sesuai pilihan
       if (selectedFrequency == 'Daily') {
         await NotificationService().scheduleRecurringFollowUp(
             id: notificationId,
@@ -162,7 +165,16 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
           message: 'Follow-up automation set to: $selectedFrequency',
         ),
       );
-      if (mounted) Navigator.pop(context, newApp);
+
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const ListApplicationScreen(),
+          ),
+          (route) => false,
+        );
+      }
     }
   }
 
@@ -231,8 +243,6 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
             const SizedBox(height: 20),
             _buildDatePicker(),
             const SizedBox(height: 24),
-
-            // --- BOX PENGATURAN TEROR FOLLOW UP ---
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -256,14 +266,11 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-
                   _buildDropdown(
                       "Frequency:",
                       selectedFrequency,
                       ['Daily', 'Weekly', 'Custom'],
                       (val) => setState(() => selectedFrequency = val!)),
-
-                  // Muncul cuma kalau user milih 'Custom'
                   if (selectedFrequency == 'Custom') ...[
                     const SizedBox(height: 12),
                     Row(
@@ -290,7 +297,6 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
                       ],
                     ),
                   ],
-
                   const SizedBox(height: 16),
                   _buildInputField(
                       "Specific Note (Optional)",
@@ -300,8 +306,6 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
                 ],
               ),
             ),
-            // ----------------------------------------
-
             const SizedBox(height: 24),
             _buildSelfEvaluationBox(),
             const SizedBox(height: 24),

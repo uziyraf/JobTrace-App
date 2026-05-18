@@ -50,7 +50,6 @@ class _JobScreenState extends State<JobScreen> {
     );
   }
 
-  // 1. Header (Profil & Notifikasi) -> SEKARANG DINAMIS!
   Widget _buildHeader() {
     String displayName = currentUser?.displayName ?? 'Job Seeker';
 
