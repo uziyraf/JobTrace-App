@@ -186,7 +186,6 @@ class NotificationService {
   // 3. STOP TEROR
   Future<void> cancelFollowUp(int baseId) async {
     try {
-      // Wajib pakai id: di versi terbaru
       await _notificationsPlugin.cancel(id: baseId);
       for (int i = 1; i <= 5; i++) {
         await _notificationsPlugin.cancel(id: baseId + i);

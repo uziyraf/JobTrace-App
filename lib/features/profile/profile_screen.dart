@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:jobtracker/features/profile/account_detail.dart';
 import 'package:jobtracker/features/profile/login_screen.dart';
 import 'package:jobtracker/features/profile/skill_screen.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -19,8 +20,6 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool isDarkMode = false;
   double cardTransparency = 0.7;
-
-  // Ambil data user yang lagi login
   final User? currentUser = FirebaseAuth.instance.currentUser;
 
   @override
@@ -301,9 +300,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
 
               // ACCOUNT DETAILS
+              // ACCOUNT DETAILS
               _buildPrefTile(
-                  LucideIcons.user, "Account Details", const Color(0x333B82F6),
-                  isLast: true),
+                LucideIcons.user,
+                "Account Details",
+                const Color(0x333B82F6),
+                isLast: true,
+                onTap: () async {
+                  // Arahin ke halaman edit profile
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AccountDetailsScreen(),
+                    ),
+                  );
+
+                  // Kalau ada perubahan (dapat sinyal true), kita reload UI ProfileScreen-nya
+                  if (result == true) {
+                    setState(() {});
+                  }
+                },
+              ),
             ],
           ),
         ),
