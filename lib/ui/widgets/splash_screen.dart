@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:jobtracker/features/profile/auth_gate.dart';
-import 'package:jobtracker/features/profile/login_screen.dart';
 
 class SplashScreenFlutter extends StatefulWidget {
   const SplashScreenFlutter({super.key});
@@ -37,7 +35,7 @@ class _SplashScreenFlutterState extends State<SplashScreenFlutter> {
               width: 190,
               fit: BoxFit.contain,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 50),
           ],
         ),
       ),

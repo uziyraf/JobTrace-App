@@ -35,9 +35,7 @@ class _ListScheduleScreenState extends State<ListScheduleScreen> {
     });
   }
 
-  // --- FUNGSI BARU: MARK AS DONE ---
   Future<void> _markAsDone(ScheduleModel schedule) async {
-    // 1. Ubah status model menjadi COMPLETED
     final updatedSchedule = ScheduleModel(
       id: schedule.id,
       jobId: schedule.jobId,
@@ -46,25 +44,25 @@ class _ListScheduleScreenState extends State<ListScheduleScreen> {
       date: schedule.date,
       time: schedule.time,
       platform: schedule.platform,
-      status: 'COMPLETED', // Diubah di sini!
+      status: 'COMPLETED',
     );
 
-    // 2. Simpan perubahan ke Database
     await ScheduleDao().updateSchedule(updatedSchedule);
 
-    // 3. Tampilkan Notifikasi
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Interview at ${schedule.company} marked as done! 🎉'),
-          backgroundColor: const Color(0xFF0EB562),
-          duration: const Duration(seconds: 2),
-        ),
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return SuccessDialog(
+            title: 'Completed!',
+            message: 'Interview at ${schedule.company} marked as done! 🎉',
+          );
+        },
       );
-    }
 
-    // 4. Refresh List agar kartu langsung pindah tab
-    _fetchSchedules();
+      _fetchSchedules();
+    }
   }
 
   Color _getPlatformColor(String platform) {
@@ -101,8 +99,6 @@ class _ListScheduleScreenState extends State<ListScheduleScreen> {
                   ),
                 );
 
-                // 2. Setelah halaman Custom Schedule ditutup (kembali ke sini),
-                // otomatis panggil fungsi fetch untuk refresh data dari Firebase!
                 _fetchSchedules();
               },
             ),
@@ -120,7 +116,7 @@ class _ListScheduleScreenState extends State<ListScheduleScreen> {
                 indicator: BoxDecoration(
                     color: const Color(0xFF0E3253),
                     borderRadius: BorderRadius.circular(10)),
-                labelColor: const Color(0xFF0F172A),
+                labelColor: const Color.fromARGB(255, 253, 253, 253),
                 unselectedLabelColor: const Color(0xFF64748B),
                 labelStyle: GoogleFonts.inter(fontWeight: FontWeight.bold),
                 unselectedLabelStyle:
@@ -186,7 +182,6 @@ class _ListScheduleScreenState extends State<ListScheduleScreen> {
           ),
           child: Column(
             children: [
-              // HEADER CARD
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -240,8 +235,6 @@ class _ListScheduleScreenState extends State<ListScheduleScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-
-              // WAKTU CARD
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -293,8 +286,6 @@ class _ListScheduleScreenState extends State<ListScheduleScreen> {
                   ],
                 ),
               ),
-
-              // --- TOMBOL MARK AS DONE (Hanya Muncul Jika Belum Selesai) ---
               if (!isCompleted) ...[
                 const SizedBox(height: 12),
                 const Divider(color: Color(0xFFE2E8F0)),
@@ -322,6 +313,147 @@ class _ListScheduleScreenState extends State<ListScheduleScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+// CLASS SUCCESS DIALOG (WAJIB ADA DI SINI)
+class SuccessDialog extends StatelessWidget {
+  final String title;
+  final String message;
+  final String? primaryButtonText;
+  final VoidCallback? onPrimaryButtonPressed;
+
+  const SuccessDialog({
+    Key? key,
+    required this.title,
+    required this.message,
+    this.primaryButtonText,
+    this.onPrimaryButtonPressed,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      backgroundColor: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: const BoxDecoration(
+                color: Color(0x3313EC80),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF13EC80),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0x4C13EC80),
+                        blurRadius: 6,
+                        offset: Offset(0, 4),
+                        spreadRadius: -4,
+                      ),
+                      BoxShadow(
+                        color: Color(0x4C13EC80),
+                        blurRadius: 15,
+                        offset: Offset(0, 10),
+                        spreadRadius: -3,
+                      )
+                    ],
+                  ),
+                  child: const Icon(Icons.check, color: Colors.white, size: 32),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Color(0xFF0F172A),
+                fontSize: 20,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Color(0xFF64748B),
+                fontSize: 16,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 32),
+            Column(
+              children: [
+                if (primaryButtonText != null && onPrimaryButtonPressed != null)
+                  ElevatedButton(
+                    onPressed: onPrimaryButtonPressed,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0F172A),
+                      minimumSize: const Size(double.infinity, 56),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.calendar_month,
+                            color: Colors.white, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          primaryButtonText!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (primaryButtonText != null) const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text(
+                    'Dismiss',
+                    style: TextStyle(
+                      color: Color(0xFF64748B),
+                      fontSize: 14,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

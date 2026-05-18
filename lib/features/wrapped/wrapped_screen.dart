@@ -7,9 +7,8 @@ class MonthlyWrappedScreen extends StatelessWidget {
   final String year;
   final int totalApplications;
   final int interviews;
-  final int habitRate; // Persentase 0-100
-  final List<MapEntry<String, double>>
-      topSources; // Daftar platform & persentasenya
+  final int habitRate;
+  final List<MapEntry<String, double>> topSources;
 
   const MonthlyWrappedScreen({
     super.key,

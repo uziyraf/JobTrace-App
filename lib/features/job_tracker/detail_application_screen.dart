@@ -87,7 +87,7 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
                     width: 56,
                     height: 56,
                     decoration: const BoxDecoration(
-                      color: Color(0xFF13EC80),
+                      color: Color(0xFF0E3253),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
@@ -458,7 +458,7 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
               color: isSelected
-                  ? const Color(0xFF0EB562)
+                  ? const Color(0xFF0E3253)
                   : const Color(0xFFE2E8F0),
               width: isSelected ? 2 : 1),
           boxShadow: isSelected
@@ -565,7 +565,7 @@ class _DetailApplicationScreenState extends State<DetailApplicationScreen> {
                 onPressed: _showUpdateStatusModal,
                 style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: const Color(0xFF0EB562),
+                    backgroundColor: const Color(0xFF0E3253),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16))),
                 child: Text('UPDATE STATUS',

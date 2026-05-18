@@ -30,9 +30,12 @@ class MyApp extends StatelessWidget {
       title: 'Job Tracker',
       debugShowCheckedModeBanner: false,
 
-      // 1. TEMA: Transparan agar gradient di builder terlihat
       theme: ThemeData(
         useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF0E3253),
+          primary: const Color(0xFF0E3253),
+        ),
         scaffoldBackgroundColor: Colors.transparent,
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,

@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:jobtracker/features/job_tracker/job_screen.dart';
+import 'package:jobtracker/ui/widgets/main_layout.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -62,7 +63,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const JobScreen()),
+          MaterialPageRoute(builder: (context) => const MainLayout()),
           (Route<dynamic> route) => false,
         );
       }
@@ -112,7 +113,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const JobScreen()),
+          MaterialPageRoute(builder: (context) => const MainLayout()),
           (Route<dynamic> route) => false,
         );
       }
@@ -125,7 +126,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  @override
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -168,14 +168,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       children: [
                         Container(),
                         Positioned(
-                          top:
-                              -20, // Tarikan ke atas disesuaikan biar gak nutupin muka orang di GIF
+                          top: -20,
                           left: 24,
                           right: 24,
-                          bottom:
-                              16, // Kasih sela 16px di bawah biar gak mepet banget
+                          bottom: 16,
                           child: Container(
-                            // Padding vertikal dikurangin dari 24 ke 20
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 24, vertical: 20),
                             decoration: BoxDecoration(
@@ -191,256 +188,262 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 )
                               ],
                             ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Center(
-                                  child: Column(
-                                    children: [
-                                      Text('Create Account',
-                                          style: GoogleFonts.inter(
-                                              fontSize: 24,
-                                              fontWeight: FontWeight.w700,
-                                              color: const Color(0xFF0F172A),
-                                              letterSpacing: -0.60)),
-                                      const SizedBox(
-                                          height: 2), // Spasi dipotong
-                                      Text('Join us to track your journey',
-                                          style: GoogleFonts.inter(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                              color: const Color(0xFF475569))),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-
-                                Text('FULL NAME',
-                                    style: GoogleFonts.inter(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: const Color(0xFF334155),
-                                        letterSpacing: 0.6)),
-                                const SizedBox(height: 4),
-                                SizedBox(
-                                  height: 44,
-                                  child: TextField(
-                                    controller: _nameController,
-                                    decoration: InputDecoration(
-                                      filled: true,
-                                      fillColor: Colors.grey[50],
-                                      hintText: 'e.g. Your Name',
-                                      hintStyle: GoogleFonts.inter(
-                                          color: const Color(0xFF94A3B8),
-                                          fontSize: 14),
-                                      errorText: _nameError,
-                                      border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          borderSide: const BorderSide(
-                                              color: Color(0xFFE2E8F0))),
-                                      enabledBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          borderSide: const BorderSide(
-                                              color: Color(0xFFE2E8F0))),
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                              horizontal: 16),
+                            // SOLUSINYA DI SINI: Bungkus form dengan SingleChildScrollView
+                            child: SingleChildScrollView(
+                              physics: const BouncingScrollPhysics(),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Center(
+                                    child: Column(
+                                      children: [
+                                        Text('Create Account',
+                                            style: GoogleFonts.inter(
+                                                fontSize: 24,
+                                                fontWeight: FontWeight.w700,
+                                                color: const Color(0xFF0F172A),
+                                                letterSpacing: -0.60)),
+                                        const SizedBox(height: 2),
+                                        Text('Join us to track your journey',
+                                            style: GoogleFonts.inter(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
+                                                color:
+                                                    const Color(0xFF475569))),
+                                      ],
                                     ),
                                   ),
-                                ),
-                                const SizedBox(
-                                    height: 8), // Spasi antar form dirapatkan
+                                  const SizedBox(height: 16),
 
-                                Text('EMAIL ADDRESS',
-                                    style: GoogleFonts.inter(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: const Color(0xFF334155),
-                                        letterSpacing: 0.6)),
-                                const SizedBox(height: 4),
-                                SizedBox(
-                                  height: 44,
-                                  child: TextField(
-                                    controller: _emailController,
-                                    keyboardType: TextInputType.emailAddress,
-                                    decoration: InputDecoration(
-                                      filled: true,
-                                      fillColor: Colors.grey[50],
-                                      hintText: 'youremail@address.com',
-                                      hintStyle: GoogleFonts.inter(
-                                          color: const Color(0xFF94A3B8),
-                                          fontSize: 14),
-                                      errorText: _emailError,
-                                      border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          borderSide: const BorderSide(
-                                              color: Color(0xFFE2E8F0))),
-                                      enabledBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          borderSide: const BorderSide(
-                                              color: Color(0xFFE2E8F0))),
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                              horizontal: 16),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-
-                                // Form Password
-                                Text('PASSWORD',
-                                    style: GoogleFonts.inter(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: const Color(0xFF334155),
-                                        letterSpacing: 0.6)),
-                                const SizedBox(height: 4),
-                                SizedBox(
-                                  height: 44,
-                                  child: TextField(
-                                    controller: _passwordController,
-                                    obscureText: _obscurePassword,
-                                    decoration: InputDecoration(
-                                      filled: true,
-                                      fillColor: Colors.grey[50],
-                                      hintText: '••••••••',
-                                      hintStyle: GoogleFonts.inter(
-                                          color: const Color(0xFF94A3B8),
-                                          fontSize: 14),
-                                      errorText: _passwordError,
-                                      border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          borderSide: const BorderSide(
-                                              color: Color(0xFFE2E8F0))),
-                                      enabledBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          borderSide: const BorderSide(
-                                              color: Color(0xFFE2E8F0))),
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                              horizontal: 16),
-                                      suffixIcon: IconButton(
-                                        icon: Icon(
-                                            _obscurePassword
-                                                ? LucideIcons.eye
-                                                : LucideIcons.eyeOff,
+                                  Text('FULL NAME',
+                                      style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: const Color(0xFF334155),
+                                          letterSpacing: 0.6)),
+                                  const SizedBox(height: 4),
+                                  SizedBox(
+                                    height: 44,
+                                    child: TextField(
+                                      controller: _nameController,
+                                      decoration: InputDecoration(
+                                        filled: true,
+                                        fillColor: Colors.grey[50],
+                                        hintText: 'e.g. Your Name',
+                                        hintStyle: GoogleFonts.inter(
                                             color: const Color(0xFF94A3B8),
-                                            size: 18),
-                                        onPressed: () => setState(() =>
-                                            _obscurePassword =
-                                                !_obscurePassword),
+                                            fontSize: 14),
+                                        errorText: _nameError,
+                                        border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            borderSide: const BorderSide(
+                                                color: Color(0xFFE2E8F0))),
+                                        enabledBorder: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            borderSide: const BorderSide(
+                                                color: Color(0xFFE2E8F0))),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                                horizontal: 16),
                                       ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(height: 16),
+                                  const SizedBox(height: 8),
 
-                                // Tombol Sign Up
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 44, // Tinggi tombol dikurangin dikit
-                                  child: ElevatedButton(
-                                    onPressed: _isLoading ? null : _register,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF0E3253),
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8)),
-                                      elevation: 0,
+                                  Text('EMAIL ADDRESS',
+                                      style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: const Color(0xFF334155),
+                                          letterSpacing: 0.6)),
+                                  const SizedBox(height: 4),
+                                  SizedBox(
+                                    height: 44,
+                                    child: TextField(
+                                      controller: _emailController,
+                                      keyboardType: TextInputType.emailAddress,
+                                      decoration: InputDecoration(
+                                        filled: true,
+                                        fillColor: Colors.grey[50],
+                                        hintText: 'youremail@address.com',
+                                        hintStyle: GoogleFonts.inter(
+                                            color: const Color(0xFF94A3B8),
+                                            fontSize: 14),
+                                        errorText: _emailError,
+                                        border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            borderSide: const BorderSide(
+                                                color: Color(0xFFE2E8F0))),
+                                        enabledBorder: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            borderSide: const BorderSide(
+                                                color: Color(0xFFE2E8F0))),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                                horizontal: 16),
+                                      ),
                                     ),
-                                    child: _isLoading
-                                        ? const SizedBox(
-                                            height: 20,
-                                            width: 20,
-                                            child: CircularProgressIndicator(
-                                                color: Colors.white,
-                                                strokeWidth: 2))
-                                        : Text('Sign Up',
+                                  ),
+                                  const SizedBox(height: 8),
+
+                                  // Form Password
+                                  Text('PASSWORD',
+                                      style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: const Color(0xFF334155),
+                                          letterSpacing: 0.6)),
+                                  const SizedBox(height: 4),
+                                  SizedBox(
+                                    height: 44,
+                                    child: TextField(
+                                      controller: _passwordController,
+                                      obscureText: _obscurePassword,
+                                      decoration: InputDecoration(
+                                        filled: true,
+                                        fillColor: Colors.grey[50],
+                                        hintText: '••••••••',
+                                        hintStyle: GoogleFonts.inter(
+                                            color: const Color(0xFF94A3B8),
+                                            fontSize: 14),
+                                        errorText: _passwordError,
+                                        border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            borderSide: const BorderSide(
+                                                color: Color(0xFFE2E8F0))),
+                                        enabledBorder: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            borderSide: const BorderSide(
+                                                color: Color(0xFFE2E8F0))),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                                horizontal: 16),
+                                        suffixIcon: IconButton(
+                                          icon: Icon(
+                                              _obscurePassword
+                                                  ? LucideIcons.eye
+                                                  : LucideIcons.eyeOff,
+                                              color: const Color(0xFF94A3B8),
+                                              size: 18),
+                                          onPressed: () => setState(() =>
+                                              _obscurePassword =
+                                                  !_obscurePassword),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // Tombol Sign Up
+                                  SizedBox(
+                                    width: double.infinity,
+                                    height: 44,
+                                    child: ElevatedButton(
+                                      onPressed: _isLoading ? null : _register,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            const Color(0xFF0E3253),
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8)),
+                                        elevation: 0,
+                                      ),
+                                      child: _isLoading
+                                          ? const SizedBox(
+                                              height: 20,
+                                              width: 20,
+                                              child: CircularProgressIndicator(
+                                                  color: Colors.white,
+                                                  strokeWidth: 2))
+                                          : Text('Sign Up',
+                                              style: GoogleFonts.inter(
+                                                  color:
+                                                      const Color(0xFF102219),
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w700)),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 12),
+
+                                  // Garis OR
+                                  Row(
+                                    children: [
+                                      const Expanded(
+                                          child: Divider(
+                                              color: Color(0x7FCBD5E1))),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12),
+                                        child: Text('OR',
                                             style: GoogleFonts.inter(
-                                                color: const Color(0xFF102219),
-                                                fontSize: 16,
+                                                color: const Color(0xFF64748B),
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w500)),
+                                      ),
+                                      const Expanded(
+                                          child: Divider(
+                                              color: Color(0x7FCBD5E1))),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 12),
+
+                                  // Tombol Google
+                                  SizedBox(
+                                    width: double.infinity,
+                                    height: 44,
+                                    child: OutlinedButton.icon(
+                                      onPressed:
+                                          _isLoading ? null : _signUpWithGoogle,
+                                      icon: Image.asset(
+                                          'assets/image/google.jpg',
+                                          height: 18),
+                                      label: Text('Sign up with Google',
+                                          style: GoogleFonts.inter(
+                                              color: const Color(0xFF334155),
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600)),
+                                      style: OutlinedButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8)),
+                                        side: const BorderSide(
+                                            color: Color(0xFFE2E8F0)),
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 16),
+
+                                  // Teks Login
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text("Already have an account? ",
+                                          style: GoogleFonts.inter(
+                                              color: const Color(0xFF475569),
+                                              fontSize: 12)),
+                                      GestureDetector(
+                                        onTap: () => Navigator.pop(context),
+                                        child: Text('Login',
+                                            style: GoogleFonts.inter(
+                                                color: const Color(0xFF0E3253),
+                                                fontSize: 12,
                                                 fontWeight: FontWeight.w700)),
+                                      ),
+                                    ],
                                   ),
-                                ),
-
-                                const SizedBox(height: 12),
-
-                                // Garis OR
-                                Row(
-                                  children: [
-                                    const Expanded(
-                                        child:
-                                            Divider(color: Color(0x7FCBD5E1))),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 12),
-                                      child: Text('OR',
-                                          style: GoogleFonts.inter(
-                                              color: const Color(0xFF64748B),
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w500)),
-                                    ),
-                                    const Expanded(
-                                        child:
-                                            Divider(color: Color(0x7FCBD5E1))),
-                                  ],
-                                ),
-
-                                const SizedBox(height: 12),
-
-                                // Tombol Google
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 44, // Disamain sama tombol Sign Up
-                                  child: OutlinedButton.icon(
-                                    onPressed:
-                                        _isLoading ? null : _signUpWithGoogle,
-                                    icon: Image.asset('assets/image/google.jpg',
-                                        height: 18),
-                                    label: Text('Sign up with Google',
-                                        style: GoogleFonts.inter(
-                                            color: const Color(0xFF334155),
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600)),
-                                    style: OutlinedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8)),
-                                      side: const BorderSide(
-                                          color: Color(0xFFE2E8F0)),
-                                    ),
-                                  ),
-                                ),
-
-                                const SizedBox(height: 16),
-
-                                // Teks Login
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text("Already have an account? ",
-                                        style: GoogleFonts.inter(
-                                            color: const Color(0xFF475569),
-                                            fontSize: 12)),
-                                    GestureDetector(
-                                      onTap: () => Navigator.pop(context),
-                                      child: Text('Login',
-                                          style: GoogleFonts.inter(
-                                              color: const Color(0xFF0E3253),
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w700)),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),

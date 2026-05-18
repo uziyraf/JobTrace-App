@@ -72,7 +72,7 @@ class _HabitScreenState extends State<HabitScreen> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-                child: CircularProgressIndicator(color: Color(0xFF13ECDA)));
+                child: CircularProgressIndicator(color: Color(0xFF0E3253)));
           }
 
           final habits = snapshot.data ?? [];
@@ -142,7 +142,7 @@ class _HabitScreenState extends State<HabitScreen> {
                               value: progressPercent,
                               strokeWidth: 8,
                               backgroundColor: const Color(0xFFF1F5F9),
-                              color: const Color(0xFF13ECDA),
+                              color: const Color(0xFF0E3253),
                             ),
                             Center(
                               child: Text(
@@ -204,7 +204,7 @@ class _HabitScreenState extends State<HabitScreen> {
                     Text(
                       'Manage',
                       style: GoogleFonts.inter(
-                        color: const Color(0xFF13ECDA),
+                        color: const Color(0xFF0E3253),
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
@@ -381,7 +381,7 @@ class _HabitScreenState extends State<HabitScreen> {
             MaterialPageRoute(builder: (context) => const AddHabitScreen()),
           );
         },
-        backgroundColor: const Color(0xFF13ECDA),
+        backgroundColor: const Color(0xFF0E3253),
         elevation: 4,
         shape: const CircleBorder(),
         child: const Icon(Icons.add, color: Colors.white, size: 28),
@@ -412,13 +412,13 @@ class _HabitScreenState extends State<HabitScreen> {
               height: 48,
               decoration: BoxDecoration(
                 color: isDoneToday
-                    ? const Color(0xFF13ECDA).withOpacity(0.15)
+                    ? const Color(0xFF0E3253).withOpacity(0.15)
                     : const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(Icons.task_alt,
                   color: isDoneToday
-                      ? const Color(0xFF13ECDA)
+                      ? const Color(0xFF0E3253)
                       : const Color(0xFF94A3B8)),
             ),
             const SizedBox(width: 16),
@@ -465,7 +465,7 @@ class _HabitScreenState extends State<HabitScreen> {
                 height: 32,
                 decoration: BoxDecoration(
                   color: isDoneToday
-                      ? const Color(0xFF13ECDA)
+                      ? const Color(0xFF0E3253)
                       : const Color(0xFFE2E8F0),
                   shape: BoxShape.circle,
                 ),
@@ -526,14 +526,14 @@ class _HabitScreenState extends State<HabitScreen> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFF13ECDA).withOpacity(0.1),
+                color: const Color(0xFF0E3253).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 'Add',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
-                  color: const Color(0xFF13ECDA),
+                  color: const Color(0xFF0E3253),
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),

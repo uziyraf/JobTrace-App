@@ -479,7 +479,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.lightbulb_outline,
-                        color: Color(0xFF005DB5)),
+                        color: Color(0xFF0E3253)),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -517,7 +517,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF005DB5), Color(0xFF0052A0)],
+                    colors: [Color(0xFF0E3253), Color(0xFF0E3253)],
                   ),
                   borderRadius: BorderRadius.circular(8),
                 ),

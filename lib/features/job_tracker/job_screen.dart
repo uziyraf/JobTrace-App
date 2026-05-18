@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Wajib import ini buat narik data profil
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:jobtracker/data/models/application_model.dart';
 import 'package:jobtracker/data/models/daos/application_dao.dart';
 import 'package:jobtracker/data/models/daos/habbit_dao.dart';
@@ -8,6 +8,9 @@ import 'package:jobtracker/data/models/habbit_model.dart';
 import 'package:jobtracker/features/habits/habbit_screen.dart';
 import 'package:jobtracker/ui/widgets/glass_card.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:jobtracker/data/models/daos/schedule_dao.dart';
+import 'package:jobtracker/data/models/schedule_model.dart';
+import 'package:intl/intl.dart';
 
 class JobScreen extends StatefulWidget {
   const JobScreen({super.key});
@@ -37,7 +40,7 @@ class _JobScreenState extends State<JobScreen> {
               const SizedBox(height: 32),
               _buildStatsGrid(),
               const SizedBox(height: 24),
-              _buildWeeklyActivityCard(),
+              _buildUpcomingInterviewCard(),
               const SizedBox(height: 32),
               _buildHabitSection(),
             ],
@@ -49,14 +52,11 @@ class _JobScreenState extends State<JobScreen> {
 
   // 1. Header (Profil & Notifikasi) -> SEKARANG DINAMIS!
   Widget _buildHeader() {
-    // Tarik nama, kalau kosong kasih default 'Job Seeker'
     String displayName = currentUser?.displayName ?? 'Job Seeker';
 
-    // Tarik foto dari Google, kalau nggak ada (misal daftar manual), bikinin avatar inisial
     String photoUrl = currentUser?.photoURL ??
         "https://ui-avatars.com/api/?name=${displayName.replaceAll(' ', '+')}&background=13EC80&color=fff";
 
-    // Bikin sapaan dinamis berdasarkan jam (Pagi/Siang/Sore/Malam)
     int hour = DateTime.now().hour;
     String greeting = 'Good Morning,';
     if (hour >= 12 && hour < 15) {
@@ -89,7 +89,7 @@ class _JobScreenState extends State<JobScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  greeting, // Sapaan dinamis sesuai jam HP
+                  greeting,
                   style: GoogleFonts.inter(
                     color: const Color(0xFF5C7066),
                     fontSize: 12,
@@ -97,7 +97,7 @@ class _JobScreenState extends State<JobScreen> {
                   ),
                 ),
                 Text(
-                  displayName, // Nama asli user
+                  displayName,
                   style: GoogleFonts.inter(
                     color: const Color(0xFF0D1B14),
                     fontSize: 20,
@@ -105,27 +105,6 @@ class _JobScreenState extends State<JobScreen> {
                   ),
                 ),
               ],
-            ),
-          ],
-        ),
-        Stack(
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Icon(LucideIcons.bell, color: Color(0xFF0D1B14), size: 24),
-            ),
-            Positioned(
-              right: 8,
-              top: 8,
-              child: Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEF4444),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 1),
-                ),
-              ),
             ),
           ],
         ),
@@ -176,9 +155,9 @@ class _JobScreenState extends State<JobScreen> {
                       ? "-"
                       : "$interviewCount",
                   "INTERVIEWS",
-                  const Color(0x3313EC80),
-                  const Color(0xFF0DB662),
-                  const Color(0xFF0DB662),
+                  const Color.fromARGB(255, 243, 245, 247),
+                  const Color.fromARGB(255, 28, 81, 131),
+                  const Color.fromARGB(255, 17, 44, 70),
                   LucideIcons.gem,
                   isActive: true,
                   bgTint: const Color(0x0C13EC80),
@@ -218,7 +197,7 @@ class _JobScreenState extends State<JobScreen> {
         color: bgTint ?? Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isActive ? const Color(0x4C13EC80) : const Color(0xFFE2E8E5),
+          color: isActive ? const Color(0xFF0E3253) : const Color(0xFFE2E8E5),
           width: 1,
         ),
         boxShadow: const [
@@ -263,62 +242,183 @@ class _JobScreenState extends State<JobScreen> {
     );
   }
 
-  // 3. Weekly Activity
-  Widget _buildWeeklyActivityCard() {
-    return GlassCard(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  // 3. Upcoming Interview Activity (Menggantikan Weekly Activity)
+  Widget _buildUpcomingInterviewCard() {
+    return FutureBuilder<List<ScheduleModel>>(
+      future: ScheduleDao().getAllSchedules(),
+      builder: (context, snapshot) {
+        // Tampilkan efek loading kalau lagi narik data dari SQLite
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const GlassCard(
+            padding: EdgeInsets.all(20),
+            child: Center(
+              child: CircularProgressIndicator(color: Color(0xFF0E3253)),
+            ),
+          );
+        }
+
+        final schedules = snapshot.data ?? [];
+
+        // 1. Filter cuma ambil yang statusnya UPCOMING
+        List<ScheduleModel> upcomingSchedules =
+            schedules.where((s) => s.status == 'UPCOMING').toList();
+
+        // 2. Urutkan jadwal dari tanggal terdekat ke terjauh
+        upcomingSchedules.sort((a, b) {
+          try {
+            // Sesuaikan format ini dengan cara lu nyimpen data (Misal: 'MMM dd, yyyy')
+            final format = DateFormat('MMM dd, yyyy');
+            final dateA = format.parse(a.date);
+            final dateB = format.parse(b.date);
+            return dateA.compareTo(dateB);
+          } catch (e) {
+            return 0; // Kalau gagal parse, biarin urutannya
+          }
+        });
+
+        return GlassCard(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // HEADER CARD
+              Row(
                 children: [
+                  const Icon(LucideIcons.calendarClock,
+                      color: Color(0xFF0E3253), size: 20),
+                  const SizedBox(width: 8),
                   Text(
-                    "Weekly Activity",
+                    "Upcoming Interviews",
                     style: GoogleFonts.inter(
                       fontWeight: FontWeight.w700,
                       fontSize: 16,
                       color: const Color(0xFF0D1B14),
                     ),
                   ),
-                  Text(
-                    "Application volume",
-                    style: GoogleFonts.inter(
-                      color: const Color(0xFF5C7066),
-                      fontSize: 12,
-                    ),
-                  ),
                 ],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0x1913EC80),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  "+12%",
-                  style: GoogleFonts.inter(
-                    color: const Color(0xFF0DB662),
-                    fontWeight: FontWeight.w500,
-                    fontSize: 12,
+              const SizedBox(height: 16),
+
+              // KONDISI KOSONG (Kalo lagi gak ada panggilan)
+              if (upcomingSchedules.isEmpty)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Column(
+                      children: [
+                        const Icon(LucideIcons.coffee,
+                            color: Color(0xFF94A3B8), size: 32),
+                        const SizedBox(height: 8),
+                        Text(
+                          "No upcoming interviews. Relax! ☕",
+                          style: GoogleFonts.inter(
+                            color: const Color(0xFF64748B),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ),
+                )
+              else
+                // KONDISI ADA DATA (Batasin max 3 jadwal terdekat biar layar gak kepanjangan)
+                ...upcomingSchedules.take(3).map((item) {
+                  // Helper warna dinamis untuk platform (Zoom, Meet, Teams)
+                  Color getPlatformColor(String platform) {
+                    if (platform.toUpperCase() == 'ZOOM')
+                      return const Color(0xFF137FEC);
+                    if (platform.toUpperCase() == 'MEET')
+                      return const Color(0xFF10B981);
+                    if (platform.toUpperCase() == 'TEAMS')
+                      return const Color(0xFF9333EA);
+                    return const Color(0xFF64748B);
+                  }
+
+                  Color pColor = getPlatformColor(item.platform);
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.6),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Row(
+                      children: [
+                        // Lingkaran Inisial Perusahaan
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Center(
+                            child: Text(
+                              item.company.substring(0, 1).toUpperCase(),
+                              style: GoogleFonts.inter(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF0EB562),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+
+                        // Detail Nama & Waktu Interview
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.company,
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF0F172A),
+                                ),
+                              ),
+                              Text(
+                                "${item.date} • ${item.time}",
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  color: const Color(0xFF64748B),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Badge Platform
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: pColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            item.platform,
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: pColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
             ],
           ),
-          const SizedBox(height: 40),
-          const Center(
-            child: Text(
-              "Grafik diletakkan di sini",
-              style: TextStyle(color: Colors.grey),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -349,13 +449,13 @@ class _JobScreenState extends State<JobScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0x1913EC80),
+                  color: const Color.fromARGB(23, 235, 230, 230),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   "Manage",
                   style: GoogleFonts.inter(
-                    color: const Color(0xFF0DB662),
+                    color: const Color(0xFF0E3253),
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),

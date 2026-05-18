@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:jobtracker/core/services/notification_service.dart';
 import 'package:jobtracker/data/models/daos/schedule_dao.dart';
 import 'package:jobtracker/data/models/schedule_model.dart';
-import 'package:jobtracker/ui/widgets/main_layout.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../data/models/application_model.dart';
 import 'package:intl/intl.dart';

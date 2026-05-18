@@ -36,7 +36,7 @@ class _ScheduleInterviewScreenState extends State<ScheduleInterviewScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF0EB562), // Warna header hijau
+              primary: Color(0xFF0E3253), // Warna header hijau
               onPrimary: Colors.white,
               onSurface: Color(0xFF0F172A),
             ),
@@ -79,13 +79,6 @@ class _ScheduleInterviewScreenState extends State<ScheduleInterviewScreen> {
     await ScheduleDao().insertSchedule(newSchedule);
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Interview scheduled for ${widget.job.company}! 📅'),
-          backgroundColor: const Color(0xFF0EB562),
-        ),
-      );
-
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
@@ -130,7 +123,7 @@ class _ScheduleInterviewScreenState extends State<ScheduleInterviewScreen> {
         child: ElevatedButton(
           onPressed: _saveSchedule,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF0EB562),
+            backgroundColor: const Color(0xFF0E3253),
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -180,7 +173,7 @@ class _ScheduleInterviewScreenState extends State<ScheduleInterviewScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(LucideIcons.clock,
-                        color: Color(0xFF0EB562), size: 24),
+                        color: Color(0xFF0E3253), size: 24),
                     const SizedBox(width: 12),
                     Text(
                       selectedTime.format(context),
@@ -298,7 +291,7 @@ class _ScheduleInterviewScreenState extends State<ScheduleInterviewScreen> {
                                 color: Color(0xFFEEF2F0),
                                 shape: BoxShape.circle),
                             child: const Icon(LucideIcons.bellRing,
-                                color: Color(0xFF0EB562), size: 20),
+                                color: Color(0xFF0E3253), size: 20),
                           ),
                           const SizedBox(width: 16),
                           Column(
@@ -320,7 +313,7 @@ class _ScheduleInterviewScreenState extends State<ScheduleInterviewScreen> {
                       Switch(
                         value: isReminderOn,
                         onChanged: (val) => setState(() => isReminderOn = val),
-                        activeColor: const Color(0xFF0EB562),
+                        activeColor: const Color(0xFF0E3253),
                       ),
                     ],
                   ),
@@ -338,7 +331,7 @@ class _ScheduleInterviewScreenState extends State<ScheduleInterviewScreen> {
                           child: DropdownButton<String>(
                             value: reminderTime,
                             icon: const Icon(LucideIcons.chevronDown,
-                                size: 16, color: Color(0xFF0EB562)),
+                                size: 16, color: Color(0xFF0E3253)),
                             items: [
                               '15 mins before',
                               '30 mins before',
@@ -349,7 +342,7 @@ class _ScheduleInterviewScreenState extends State<ScheduleInterviewScreen> {
                                     value: time,
                                     child: Text(time,
                                         style: GoogleFonts.inter(
-                                            color: const Color(0xFF0EB562),
+                                            color: const Color(0xFF0E3253),
                                             fontWeight: FontWeight.bold))))
                                 .toList(),
                             onChanged: (val) =>
@@ -387,9 +380,7 @@ class _ScheduleInterviewScreenState extends State<ScheduleInterviewScreen> {
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                       color: const Color(0xFF0F172A)))),
-          const Icon(LucideIcons.lock,
-              color: Color(0xFFCBD5E1),
-              size: 16), // Tanda kalau ini tidak bisa diedit
+          const Icon(LucideIcons.lock, color: Color(0xFFCBD5E1), size: 16),
         ],
       ),
     );
@@ -405,11 +396,11 @@ class _ScheduleInterviewScreenState extends State<ScheduleInterviewScreen> {
         alignment: Alignment.center,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0EB562) : Colors.white,
+          color: isSelected ? const Color(0xFF0E3253) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
               color: isSelected
-                  ? const Color(0xFF0EB562)
+                  ? const Color(0xFF0E3253)
                   : const Color(0xFFE2E8F0)),
           boxShadow: isSelected
               ? [

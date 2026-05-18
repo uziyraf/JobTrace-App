@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart'; // 1. IMPORT INI MENGATASI ERROR 'Color'
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -16,7 +16,7 @@ class NotificationService {
     tz.setLocalLocation(tz.getLocation('Asia/Jakarta'));
 
     const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@drawable/ic_notif');
+        AndroidInitializationSettings('@mipmap/ic_launcher');
 
     const InitializationSettings initSettings = InitializationSettings(
       android: androidSettings,
@@ -26,10 +26,9 @@ class NotificationService {
   }
 
   Future<void> requestPermission() async {
-    final androidImplementation = _notificationsPlugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >();
+    final androidImplementation =
+        _notificationsPlugin.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
     await androidImplementation?.requestNotificationsPermission();
     await androidImplementation?.requestExactAlarmsPermission();
   }
@@ -40,51 +39,31 @@ class NotificationService {
     required DateTime interviewDate,
   }) async {
     try {
-      print("🔔 [NOTIF LOG] Mulai memproses notifikasi...");
-
       await requestPermission();
-      print("🔔 [NOTIF LOG] Cek Izin selesai.");
+      final scheduledTime = tz.TZDateTime.from(interviewDate, tz.local)
+          .add(const Duration(days: 1));
 
-      final scheduledTime = tz.TZDateTime.now(
-        tz.UTC,
-      ).add(const Duration(seconds: 10));
-      print("🔔 [NOTIF LOG] Jadwal diset pada: $scheduledTime");
+      if (scheduledTime.isBefore(tz.TZDateTime.now(tz.local))) return;
 
       const AndroidNotificationDetails androidDetails =
           AndroidNotificationDetails(
-            'jalur_skripsi_baru_v1',
-            'Interview Reminders',
-            channelDescription: 'Reminds you to update interview status',
-            importance: Importance.max,
-            priority: Priority.high,
-            color: Color(0xFF0EB562),
-          );
-
-      const NotificationDetails details = NotificationDetails(
-        android: androidDetails,
-      );
-
-      print("🔔 [NOTIF LOG] Mengirim perintah ke sistem Android...");
-
-      await _notificationsPlugin.show(
-        id: 99,
-        title: 'TEST INSTAN 🚀',
-        body: 'Kalau ini muncul, berarti Infinix memblokir alarm 10 detiknya!',
-        notificationDetails: details,
+        'jalur_skripsi_baru_v1',
+        'Interview Reminders',
+        importance: Importance.max,
+        priority: Priority.high,
+        color: Color(0xFF0E3253),
       );
 
       await _notificationsPlugin.zonedSchedule(
         id: id,
         title: 'Gimana interview di $companyName kemarin? 🤩',
-        body: 'Yuk tandai selesai dan update status lamaranmu di JobTracker!',
+        body: 'Yuk tandai selesai dan update status lamaranmu di JobTrace!',
         scheduledDate: scheduledTime,
-        notificationDetails: details,
+        notificationDetails: const NotificationDetails(android: androidDetails),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       );
-
-      print("✅ [NOTIF LOG] SUKSES! Jadwal 10 detik berhasil ditanam ke HP.");
     } catch (e) {
-      print("🚨 [NOTIF ERROR] GAGAL! Penyebabnya: $e");
+      debugPrint('ERROR INTERVIEW NOTIF: $e');
     }
   }
 
@@ -96,22 +75,11 @@ class NotificationService {
   }) async {
     try {
       await requestPermission();
-
       final now = tz.TZDateTime.now(tz.local);
-      var scheduledDate = tz.TZDateTime(
-        tz.local,
-        now.year,
-        now.month,
-        now.day,
-        hour,
-        minute,
-      );
-
-      if (scheduledDate.isBefore(now)) {
+      var scheduledDate =
+          tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+      if (scheduledDate.isBefore(now))
         scheduledDate = scheduledDate.add(const Duration(days: 1));
-      }
-
-      print("🔔 [NOTIF LOG] Habit '$habitName' diset ke: $scheduledDate");
 
       await _notificationsPlugin.zonedSchedule(
         id: id,
@@ -119,21 +87,113 @@ class NotificationService {
         body: 'Yuk selesaikan sekarang agar streak tetap terjaga!',
         scheduledDate: scheduledDate,
         notificationDetails: const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'habit_channel_id', // ID Channel bebas tapi unik
-            'Habit Reminders',
-            importance: Importance.max,
-            priority: Priority.high,
-          ),
-        ),
+            android: AndroidNotificationDetails(
+                'habit_channel_id', 'Habit Reminders',
+                importance: Importance.max, priority: Priority.high)),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        matchDateTimeComponents:
-            DateTimeComponents.time, // Biar tiap hari jam segini
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    } catch (e) {
+      debugPrint('ERROR HABIT NOTIF: $e');
+    }
+  }
+
+  // ====================================================================
+  // --- FITUR AUTOMASI TEROR FOLLOW UP ---
+  // ====================================================================
+
+  // 1. DEFAULT FREQUENCY (DAILY / WEEKLY)
+  Future<void> scheduleRecurringFollowUp({
+    required int id,
+    required String companyName,
+    String? note,
+    required RepeatInterval interval,
+  }) async {
+    try {
+      await requestPermission();
+      const AndroidNotificationDetails androidDetails =
+          AndroidNotificationDetails(
+        'default_follow_up_channel',
+        'Default Follow Up Reminders',
+        importance: Importance.max,
+        priority: Priority.high,
+        color: Color(0xFF0E3253),
+        styleInformation: BigTextStyleInformation(''),
       );
 
-      print("✅ [NOTIF LOG] Berhasil ditanam!");
+      String bodyText =
+          'Status lamaran di $companyName belum berubah. Yuk cek/follow-up!';
+      if (note != null && note.isNotEmpty)
+        bodyText = 'Catatan Follow-up: $note';
+
+      await _notificationsPlugin.periodicallyShow(
+        id: id,
+        title: 'Update Lamaran: $companyName 🏢',
+        body: bodyText,
+        repeatInterval: interval,
+        notificationDetails: const NotificationDetails(android: androidDetails),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      );
     } catch (e) {
-      print("🚨 [NOTIF ERROR] Gagal: $e");
+      debugPrint('ERROR RECURRING NOTIF: $e');
+    }
+  }
+
+  // 2. CUSTOM FREQUENCY - TESTING 5 DETIK
+  Future<void> scheduleCustomFollowUp({
+    required int baseId,
+    required String companyName,
+    String? note,
+    required int intervalDays,
+  }) async {
+    try {
+      await requestPermission();
+      const AndroidNotificationDetails androidDetails =
+          AndroidNotificationDetails(
+        'custom_follow_up_channel',
+        'Custom Follow Up Reminders',
+        importance: Importance.max,
+        priority: Priority.high,
+        color: Color(0xFF0EB562),
+        styleInformation: BigTextStyleInformation(''),
+      );
+
+      String bodyText =
+          'Status lamaran di $companyName belum berubah. Yuk cek/follow-up!';
+      if (note != null && note.isNotEmpty)
+        bodyText = 'Catatan Follow-up: $note';
+
+      // --- MENGUBAH SEMENTARA JADI DETIK (JEDA 5 DETIK) ---
+      for (int i = 1; i <= 5; i++) {
+        final scheduledTime =
+            tz.TZDateTime.now(tz.local).add(Duration(seconds: 5 * i));
+
+        await _notificationsPlugin.zonedSchedule(
+          id: baseId + i,
+          title: 'Cek Status: $companyName (Tes ke-$i) 🏢',
+          body: bodyText,
+          scheduledDate: scheduledTime,
+          notificationDetails:
+              const NotificationDetails(android: androidDetails),
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        );
+      }
+    } catch (e) {
+      debugPrint('ERROR CUSTOM NOTIF: $e');
+    }
+  }
+
+  // 3. STOP TEROR
+  Future<void> cancelFollowUp(int baseId) async {
+    try {
+      // Wajib pakai id: di versi terbaru
+      await _notificationsPlugin.cancel(id: baseId);
+      for (int i = 1; i <= 5; i++) {
+        await _notificationsPlugin.cancel(id: baseId + i);
+      }
+      debugPrint('Semua teror follow-up untuk ID $baseId berhasil dihentikan.');
+    } catch (e) {
+      debugPrint('ERROR CANCEL NOTIF: $e');
     }
   }
 }

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-
-// Import halaman lu
 import 'package:jobtracker/features/job_tracker/job_screen.dart';
 import 'package:jobtracker/features/job_tracker/list_application_screen.dart';
 import 'package:jobtracker/features/profile/profile_screen.dart';
@@ -171,7 +169,6 @@ class NavbarPainter extends CustomPainter {
     path.lineTo(0, h);
     path.close();
 
-    // Gambar shadow & background
     canvas.drawShadow(path, const Color(0x1A000000), 10, true);
     canvas.drawPath(path, paint);
   }

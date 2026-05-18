@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jobtracker/data/models/daos/application_dao.dart';
-import 'package:jobtracker/ui/widgets/glass_card.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:jobtracker/features/job_tracker/detail_application_screen.dart';
-import 'package:jobtracker/features/job_tracker/add_application_screen.dart';
 import '../../data/models/application_model.dart';
 
 class ListApplicationScreen extends StatefulWidget {
@@ -17,9 +15,8 @@ class ListApplicationScreen extends StatefulWidget {
 class _ListApplicationScreenState extends State<ListApplicationScreen> {
   String selectedFilter = 'All';
 
-  // 2. UBAH VARIABEL UNTUK MENAMPUNG DATA ASLI
   List<ApplicationModel> applications = [];
-  bool isLoading = true; // Indikator loading saat mengambil data
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -27,7 +24,6 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
     _refreshApplications();
   }
 
-  // 3. FUNGSI UNTUK MENGAMBIL DATA DARI DATABASE
   Future<void> _refreshApplications() async {
     setState(() => isLoading = true);
     final data = await ApplicationDao().getAllApplications();
@@ -46,7 +42,6 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
             _buildHeader(),
             _buildFilterBar(),
             Expanded(
-              // 4. CEK APAKAH SEDANG LOADING ATAU KOSONG
               child: isLoading
                   ? const Center(
                       child:
@@ -59,7 +54,6 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
                           itemBuilder: (context, index) {
                             final item = applications[index];
 
-                            // Logic filter
                             if (selectedFilter != 'All' &&
                                 item.status != selectedFilter) {
                               return const SizedBox.shrink();
@@ -135,7 +129,6 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
     );
   }
 
-  // 6. TAMPILAN JIKA BELUM ADA DATA
   Widget _buildEmptyState() {
     return Center(
       child: Column(
@@ -204,7 +197,6 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
         ),
         child: Column(
           children: [
-            // HEADER CARD
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -258,7 +250,6 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
               ],
             ),
             const SizedBox(height: 16),
-
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -306,36 +297,6 @@ class _ListApplicationScreenState extends State<ListApplicationScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildStatusBadge(String status) {
-    Color bg;
-    Color text;
-    switch (status) {
-      case 'Interview':
-        bg = const Color(0xFFFEF3C7);
-        text = const Color(0xFFB45309);
-        break;
-      case 'Offer':
-        bg = const Color(0x3313EC80);
-        text = const Color(0xFF065F46);
-        break;
-      case 'Rejected':
-        bg = const Color(0xFFF1F5F9);
-        text = const Color(0xFF64748B);
-        break;
-      default:
-        bg = const Color(0xFFDBEAFE);
-        text = const Color(0xFF1D4ED8);
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration:
-          BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
-      child: Text(status,
-          style: GoogleFonts.inter(
-              fontSize: 12, fontWeight: FontWeight.w600, color: text)),
     );
   }
 }
